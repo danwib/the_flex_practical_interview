@@ -1,62 +1,50 @@
 @import "tailwindcss";
 
-/* Base tokens (keep Next.js defaults) */
+/* ---- Light theme tokens (no dark mode) ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* App canvas vs. card surface */
+  --background: #ffffff;     /* page background (keep white or use #f8fafc for subtle tint) */
+  --foreground: #171717;     /* default text color */
 
-  /* Brand tokens (swap later to match The Flex exactly) */
-  --brand: #0f172a;     /* primary accent */
-  --ink: #0a0a0a;       /* headings/body emphasis */
-  --subtle: #64748b;    /* captions/secondary text */
-  --surface: #ffffff;   /* cards/surfaces */
-  --line: #e5e7eb;      /* borders/dividers */
+  /* Brand + UI neutrals */
+  --brand: #0f172a;          /* accent / links (deep slate) */
+  --ink: #0a0a0a;            /* headings/body emphasis */
+  --subtle: #6b7280;         /* captions/secondary text (slate-500) */
+  --surface: #ffffff;        /* cards/surfaces */
+  --line: #e5e7eb;           /* borders/dividers (gray-200) */
 }
 
-/* Map tokens into Tailwind theme (Tailwind v4 @theme inline) */
+/* Map tokens into Tailwind (v4 @theme inline) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Expose brand colors as Tailwind colors */
   --color-brand: var(--brand);
   --color-ink: var(--ink);
   --color-subtle: var(--subtle);
   --color-surface: var(--surface);
   --color-line: var(--line);
 
-  /* Keep Next.js font vars if you’re using next/font (Geist) */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Optional radii you can use via rounded-[var(--radius-card)] if desired */
   --radius-card: 1rem;
   --radius-pill: 9999px;
 }
 
-/* Dark scheme (media-based; switch to class strategy if you prefer) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-
-    --surface: #0b0b0b;
-    --ink: #fafafa;
-    --subtle: #a3a3a3;
-    --line: #262626;
-  }
-}
-
 /* Base element styles */
-html, body {
-  height: 100%;
-}
+html, body { height: 100%; }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  /* Falls back to system if next/font vars aren’t present */
   font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+}
+
+/* Optional: consistent checkbox/radio accent using brand */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--brand);
 }
 
 /* Optional: nicer focus ring for a11y */
