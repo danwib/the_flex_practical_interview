@@ -107,11 +107,12 @@ export default function DashboardPage() {
   const inputCls =
     'w-full bg-surface border border-line rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand/30';
 
-  // --- NEW: Public view quick-nav ---
+  // --- Public view quick-nav ---
   const [publicListing, setPublicListing] = useState<string>('');
-  const openPublicPage = () => {
+  const openPublic = (variant: 'property' | 'reviews') => {
     if (!publicListing) return;
-    const href = `/properties/${encodeURIComponent(publicListing)}/reviews`;
+    const base = `/properties/${encodeURIComponent(publicListing)}`;
+    const href = variant === 'property' ? base : `${base}/reviews`;
     window.open(href, '_blank', 'noopener,noreferrer');
   };
 
@@ -135,25 +136,34 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          {/* NEW: Public view quick-nav */}
+          {/* Public view quick-nav */}
           <div className="flex items-center gap-2">
             <select
               className={inputCls}
               value={publicListing}
               onChange={(e) => setPublicListing(e.target.value)}
-              aria-label="Choose listing to view public reviews"
+              aria-label="Choose listing to view public page"
             >
               <option value="">Public view: choose listing…</option>
               {listings.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
             <button
-              onClick={openPublicPage}
+              onClick={() => openPublic('property')}
               disabled={!publicListing}
               className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-brand hover:text-ink disabled:opacity-50"
-              aria-label="Open public reviews page in a new tab"
-              title={publicListing ? `Open public page for ${publicListing}` : 'Select a listing'}
+              aria-label="Open property details page"
+              title={publicListing ? `Open property page for ${publicListing}` : 'Select a listing'}
             >
-              Open
+              Open property
+            </button>
+            <button
+              onClick={() => openPublic('reviews')}
+              disabled={!publicListing}
+              className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-subtle hover:text-ink disabled:opacity-50"
+              aria-label="Open all reviews page"
+              title={publicListing ? `Open reviews page for ${publicListing}` : 'Select a listing'}
+            >
+              All reviews
             </button>
           </div>
         </div>
