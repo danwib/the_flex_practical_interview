@@ -11,7 +11,8 @@ const toIsoLike = (s: string) => s.replace(' ', 'T'); // "YYYY-MM-DD HH:mm:ss" â
 const safeDate = (s?: string | null) => (s ? new Date(s) : undefined);
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const trim = (s: string) => s.trim().replace(/\s+/g, ' ');
-
+const parseCsvLower = (s: string | null) =>
+  s ? s.split(',').map(x => x.trim().toLowerCase()).filter(Boolean) : null;
 
 // ---------- Zod schemas (lenient, with defaults) ----------
 const CatZ = z.object({
@@ -23,6 +24,8 @@ const ReviewZ = z.object({
   id: z.number().int(),
   type: z.string().default('guest-to-host'),
   status: z.string().default('published'),
+  channel: z.string().optional().default('Direct'),          // NEW
+  approved: z.boolean().optional().default(false),            // NEW
   rating: z.number().int().min(0).max(10).nullable().optional(),
   publicReview: z.string().default(''),
   reviewCategory: z.array(CatZ).default([]),
@@ -44,8 +47,16 @@ function validate(rawArr: unknown): ZReview[] {
   return ok;
 }
 
+// Local API shape: extend base Review with optional fields we're adding
+type ApiReview = Review & {
+  channel?: string;
+  approved?: boolean;
+  type?: string;
+  status?: string;
+};
+
 // Normalise values for resilience (trim strings, clamp ratings, safe ISO dates)
-function normalize(r: ZReview): Review {
+function normalize(r: ZReview): ApiReview {
   const normCats = (r.reviewCategory ?? []).map((c) => ({
     category: trim(c.category),
     rating: c.rating == null ? null : clamp(c.rating, 0, 10),
@@ -61,6 +72,8 @@ function normalize(r: ZReview): Review {
     id: r.id,
     type: r.type || 'guest-to-host',
     status: r.status || 'published',
+    channel: r.channel ? trim(r.channel) : 'Direct',   // NEW
+    approved: Boolean(r.approved),                     // NEW
     rating: r.rating == null ? null : clamp(r.rating, 0, 10),
     publicReview: r.publicReview || '',
     reviewCategory: normCats,
@@ -71,9 +84,9 @@ function normalize(r: ZReview): Review {
 }
 
 // Remove duplicate IDs (keep first occurrence)
-function dedupeById(rows: Review[]): Review[] {
+function dedupeById(rows: ApiReview[]): ApiReview[] {
   const seen = new Set<number>();
-  const out: Review[] = [];
+  const out: ApiReview[] = [];
   for (const r of rows) {
     if (!seen.has(r.id)) {
       seen.add(r.id);
@@ -87,7 +100,7 @@ function dedupeById(rows: Review[]): Review[] {
 const HOSTAWAY_ACCOUNT_ID = process.env.HOSTAWAY_ACCOUNT_ID;
 const HOSTAWAY_API_KEY = process.env.HOSTAWAY_API_KEY;
 
-async function fetchReviews(): Promise<Review[]> {
+async function fetchReviews(): Promise<ApiReview[]> {
   // Live path (optional)
   if (HOSTAWAY_ACCOUNT_ID && HOSTAWAY_API_KEY) {
     const url = `https://api.hostaway.com/v1/reviews?accountId=${encodeURIComponent(
@@ -116,7 +129,7 @@ async function fetchReviews(): Promise<Review[]> {
 // ---------- API ----------
 type ReviewsApiSuccess = {
   status: 'success';
-  result: Review[];
+  result: ApiReview[]; // CHANGED to include extended fields in API
   total: number;
   page: number;
   limit: number;
@@ -127,18 +140,36 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
 
-    // Query params
+    // Existing query params
     const listing = searchParams.get('listing'); // exact match on listingName
     const q = searchParams.get('q'); // text search in publicReview/guestName/listing
     const cat = searchParams.get('category'); // category name
     const minStr = searchParams.get('min'); // min category rating
     const from = searchParams.get('from'); // YYYY-MM-DD
     const to = searchParams.get('to'); // YYYY-MM-DD
-    const sortBy = searchParams.get('sortBy') || '-submittedAt'; // 'submittedAt' | '-submittedAt' | 'rating' | '-rating'
+    const sortByRaw = searchParams.get('sortBy') || '-submittedAt'; // existing contract
+
+    // Pagination (existing)
     const page = Math.max(1, Number(searchParams.get('page') || 1));
     const limit = clamp(Number(searchParams.get('limit') || 25), 1, 100);
 
     const min = minStr !== null ? Number(minStr) : null;
+
+    // NEW query params (non-breaking additions)
+    const typesCsv = parseCsvLower(searchParams.get('type'));        // e.g. "guest-to-host,host-to-guest"
+    const channelsCsv = parseCsvLower(searchParams.get('channel'));  // e.g. "Airbnb,Direct"
+    const approvedOnly = searchParams.get('approvedOnly') === 'true';
+
+    // Optional alt sort controls (map to existing sortBy)
+    // sort=date|rating, order=asc|desc
+    const sortAlt = (searchParams.get('sort') || '').toLowerCase();
+    const orderAlt = (searchParams.get('order') || '').toLowerCase();
+    let sortBy = sortByRaw; // keep original default/behavior
+    if (sortAlt === 'date') {
+      sortBy = orderAlt === 'asc' ? 'submittedAt' : '-submittedAt';
+    } else if (sortAlt === 'rating') {
+      sortBy = orderAlt === 'asc' ? 'rating' : '-rating';
+    }
 
     // Load + normalise
     const all = await fetchReviews();
@@ -146,7 +177,7 @@ export async function GET(req: NextRequest) {
     // Default: published only (change if you need drafts)
     let rows = all.filter((r) => (r.status ?? 'published') === 'published');
 
-    // Filters
+    // Filters (existing)
     if (listing) rows = rows.filter((r) => r.listingName === listing);
 
     if (q) {
@@ -171,6 +202,21 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // NEW: type filter
+    if (typesCsv && typesCsv.length > 0) {
+      rows = rows.filter((r) => r.type && typesCsv.includes(String(r.type).toLowerCase()));
+    }
+
+    // NEW: channel filter
+    if (channelsCsv && channelsCsv.length > 0) {
+      rows = rows.filter((r) => r.channel && channelsCsv.includes(String(r.channel).toLowerCase()));
+    }
+
+    // NEW: approvedOnly filter
+    if (approvedOnly) {
+      rows = rows.filter((r) => r.approved === true);
+    }
+
     // Hardened date filtering (ISO stored in submittedAt)
     if (from) {
       const f = safeDate(`${from}T00:00:00`);
@@ -191,7 +237,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Sorting
+    // Sorting (existing, with mapped sortBy)
     const key = sortBy.startsWith('-') ? sortBy.slice(1) : sortBy;
     const dir = sortBy.startsWith('-') ? -1 : 1;
     rows.sort((a, b) => {
@@ -206,7 +252,7 @@ export async function GET(req: NextRequest) {
       return (av - bv) * dir;
     });
 
-    // Pagination
+    // Pagination (existing)
     const total = rows.length;
     const start = (page - 1) * limit;
     rows = rows.slice(start, start + limit);
