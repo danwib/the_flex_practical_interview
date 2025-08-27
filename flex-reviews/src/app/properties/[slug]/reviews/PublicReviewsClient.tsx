@@ -10,12 +10,9 @@ type Review = {
   listingName: string;
   guestName: string;
   submittedAt: string;            // "YYYY-MM-DD HH:mm:ss"
-  submittedAtIso?: string;        // optional ISO (if generator provides it)
+  submittedAtIso?: string;        // optional ISO
   reviewCategory: CategoryRating[];
-  approved?: boolean;             // optional (server-side flag, if present)
-  channel?: string;               // optional (for future display/filters)
-  type?: string;                  // optional
-  rating?: number | null;         // optional overall rating
+  approved?: boolean;             // optional server-approved flag
 };
 
 export default function PublicReviewsClient({ slug }: { slug: string }) {
@@ -25,9 +22,9 @@ export default function PublicReviewsClient({ slug }: { slug: string }) {
   useEffect(() => {
     const url = new URL('/api/reviews/hostaway', window.location.origin);
     url.searchParams.set('listing', slug);
-    url.searchParams.set('approvedOnly', 'true'); // NEW: use server-approved reviews
-    url.searchParams.set('sort', 'date');         // NEW: newest first
+    url.searchParams.set('sort', 'date');  // newest first for nicer UX
     url.searchParams.set('order', 'desc');
+    // IMPORTANT: do NOT set approvedOnly=true here, we need all rows to union with local approvals
 
     fetch(url)
       .then((r) => r.json())
@@ -36,20 +33,19 @@ export default function PublicReviewsClient({ slug }: { slug: string }) {
     try {
       setApprovals(JSON.parse(localStorage.getItem('approvals') || '{}'));
     } catch {
-      // noop
+      /* noop */
     }
   }, [slug]);
 
-  // Keep previous functionality:
-  // If there are any local approvals saved, use them to filter; otherwise use server result as-is.
+  // Union of server-approved OR locally-approved
   const approved = useMemo(() => {
-    const hasLocalApprovals = approvals && Object.keys(approvals).length > 0;
-    if (!hasLocalApprovals) return reviews;
-    return reviews.filter((r) => approvals[Number(r.id)] === true);
+    return reviews.filter((r) => {
+      const idNum = Number(r.id);
+      return r.approved === true || approvals[idNum] === true;
+    });
   }, [reviews, approvals]);
 
   const formatWhen = (r: Review) => {
-    // Prefer ISO if present; otherwise convert "YYYY-MM-DD HH:mm:ss" → "YYYY-MM-DDTHH:mm:ss"
     const isoish = r.submittedAtIso ?? (r.submittedAt ? r.submittedAt.replace(' ', 'T') : '');
     const dt = isoish ? new Date(isoish) : null;
     return dt && !isNaN(dt.getTime()) ? dt.toLocaleDateString() : r.submittedAt;
