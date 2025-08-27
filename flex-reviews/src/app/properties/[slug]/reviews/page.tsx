@@ -1,3 +1,4 @@
+// src/app/properties/[slug]/reviews/page.tsx
 import PublicReviewsClient from './PublicReviewsClient';
 
 export default function Page({ params }: { params: { slug: string } }) {
