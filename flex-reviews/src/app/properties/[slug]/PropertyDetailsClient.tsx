@@ -1,4 +1,3 @@
-// src/app/properties/[slug]/PropertyDetailsClient.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
@@ -17,28 +16,23 @@ type Review = {
   rating?: number | null; // may be /10 in your data
 };
 
-function StarRating({ value, outOf = 5, size = 'h-4 w-4' }: { value: number; outOf?: number; size?: string }) {
-  const stars = Array.from({ length: outOf }, (_, i) => {
-    const diff = value - i;
-    const type = diff >= 1 ? 'full' : diff >= 0.5 ? 'half' : 'empty';
-    return (
-      <svg key={i} viewBox="0 0 24 24" aria-hidden className={`${size} inline-block`}>
-        {type !== 'empty' ? (
-          <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z" fill="currentColor" />
-        ) : (
-          <path d="M22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24z" fill="none" stroke="currentColor" />
-        )}
-      </svg>
-    );
-  });
-  return <span className="text-amber-500">{stars}</span>;
+function Bullet() {
+  return <span aria-hidden className="mx-2 text-subtle">•</span>;
+}
+
+function Star({ className = "h-4 w-4" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="currentColor">
+      <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z" />
+    </svg>
+  );
 }
 
 function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section id={id} className="py-6 border-t border-line">
+    <section id={id} className="py-8 border-t border-line">
       <h2 className="text-xl font-semibold text-ink">{title}</h2>
-      <div className="mt-3">{children}</div>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -46,37 +40,30 @@ function Section({ title, children, id }: { title: string; children: React.React
 export default function PropertyDetailsClient({ slug }: { slug: string }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [approvals, setApprovals] = useState<Record<number, boolean>>({});
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
-  // Fetch all reviews for this listing (we'll show approved union only)
+  // Fetch all reviews for this listing; show approved-only (server OR local demo)
   useEffect(() => {
     const url = new URL('/api/reviews/hostaway', window.location.origin);
     url.searchParams.set('listing', slug);
     url.searchParams.set('sort', 'date');
     url.searchParams.set('order', 'desc');
-
-    fetch(url)
-      .then((r) => r.json())
-      .then((d) => setReviews(Array.isArray(d?.result) ? d.result : []));
-
-    try {
-      setApprovals(JSON.parse(localStorage.getItem('approvals') || '{}'));
-    } catch { /* noop */ }
+    fetch(url).then(r => r.json()).then(d => setReviews(Array.isArray(d?.result) ? d.result : []));
+    try { setApprovals(JSON.parse(localStorage.getItem('approvals') || '{}')); } catch {}
   }, [slug]);
 
-  // Only approved: server-approved OR locally-approved (demo union)
-  const approved = useMemo(() => {
-    return reviews.filter((r) => r.approved === true || approvals[Number(r.id)] === true);
-  }, [reviews, approvals]);
+  const approved = useMemo(
+    () => reviews.filter(r => r.approved === true || approvals[Number(r.id)] === true),
+    [reviews, approvals]
+  );
 
-  // Average rating (convert /10 → /5 if needed)
+  // /10 → /5 if needed
   const avg5 = useMemo(() => {
-    const vals = approved
-      .map((r) => (r.rating == null ? null : r.rating))
-      .filter((v): v is number => v != null);
+    const vals = approved.map(r => r.rating).filter((n): n is number => n != null);
     if (!vals.length) return null;
-    const mean10 = vals.reduce((a, b) => a + b, 0) / vals.length;
-    const asFive = mean10 > 5 ? mean10 / 2 : mean10; // support either scale
-    return Math.round(asFive * 10) / 10;
+    const mean10 = vals.reduce((a,b)=>a+b,0)/vals.length;
+    return Math.round(((mean10 > 5 ? mean10/2 : mean10) + Number.EPSILON)*100)/100;
   }, [approved]);
 
   const formatWhen = (r: Review) => {
@@ -87,104 +74,158 @@ export default function PropertyDetailsClient({ slug }: { slug: string }) {
       : r.submittedAt;
   };
 
-  // Show top N approved on the property page; link to full list
-  const TOP = 3;
-  const topApproved = approved.slice(0, TOP);
-
+  // ---- Page layout ----
+  // Breadcrumb + title/meta + rating block, then gallery
   return (
-    <div className="bg-surface">
-      {/* HERO */}
-      <div className="relative h-56 w-full overflow-hidden rounded-none bg-gradient-to-br from-brand/5 to-brand/0">
-        {/* Placeholder hero (replace with real gallery later) */}
-        <div className="absolute inset-0 grid place-items-center">
-          <div className="rounded-2xl border border-line bg-surface/80 px-4 py-2 shadow-sm backdrop-blur">
-            <h1 className="text-2xl font-semibold text-ink">{slug}</h1>
+    <div className="bg-background text-ink">
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        {/* Breadcrumb */}
+        <nav className="text-sm">
+          <a href="/dashboard" className="text-subtle hover:text-ink">All listings</a>
+        </nav>
+
+        {/* Title / Meta / Rating */}
+        <header className="mt-2">
+          <h1 className="text-ink text-3xl md:text-4xl font-semibold leading-tight">
+            {slug}
+          </h1>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 text-subtle">
+            <span>Apartment</span>
+            <Bullet />
+            <span>5 guests</span>
+            <Bullet />
+            <span>2 bedrooms</span>
+            <Bullet />
+            <span>2 bathrooms</span>
+            <Bullet />
+            <span className="inline-flex items-center gap-1.5" aria-label="Average rating">
+              <span className="text-ink">{avg5 ?? '–'}</span>
+              <Star className="h-4 w-4 text-ink" />
+              <span>({approved.length} review{approved.length === 1 ? '' : 's'})</span>
+            </span>
+          </div>
+        </header>
+
+
+        {/* Gallery (placeholder) */}
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="sm:col-span-2 rounded-2xl border border-line bg-surface h-64" />
+          <div className="grid gap-2">
+            <div className="rounded-2xl border border-line bg-surface h-31" />
+            <div className="rounded-2xl border border-line bg-surface h-31" />
           </div>
         </div>
-      </div>
 
-      {/* CONTENT */}
-      <div className="mx-auto max-w-5xl px-4 py-6">
-        {/* Quick facts row (stub—align to Flex’s details later) */}
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-line bg-surface p-3">
-            <div className="text-xs uppercase text-subtle">Location</div>
-            <div className="text-ink">Central London</div>
-          </div>
-          <div className="rounded-xl border border-line bg-surface p-3">
-            <div className="text-xs uppercase text-subtle">Sleeps</div>
-            <div className="text-ink">2–4 guests</div>
-          </div>
-          <div className="rounded-xl border border-line bg-surface p-3">
-            <div className="text-xs uppercase text-subtle">Average Rating</div>
-            <div className="flex items-center gap-2 text-ink">
-              <span>{avg5 ?? '–'}</span>
-              {typeof avg5 === 'number' && <StarRating value={avg5} />}
-              <span className="text-subtle text-sm">({approved.length} review{approved.length === 1 ? '' : 's'})</span>
-            </div>
-          </div>
-        </div>
-
-        {/* About section (stub copy for now) */}
+        {/* About — matches “Show more” behavior */}
         <Section title="About this place">
-          <p className="leading-relaxed text-ink">
+          <p className="leading-relaxed">
             Stylish serviced apartment with fast Wi-Fi and self check-in. Moments from transport and local amenities.
-            Ideal for work trips and weekend stays.
+            Ideal for work trips and weekend stays. The location is ideal—close to great cafes, shops, and bars, with
+            easy access to transport. Everything is ready for you to enjoy your stay.
           </p>
+          <div className="mt-2">
+            <button
+              className="text-brand hover:text-ink text-sm"
+              onClick={() => setAboutOpen(s => !s)}
+            >
+              {aboutOpen ? 'Show less' : 'Show more'}
+            </button>
+            {aboutOpen && (
+              <p className="mt-2 leading-relaxed text-ink/90">
+                Additional details: quiet building, keypad entry, weekly cleaning options on request, and flexible stays.
+              </p>
+            )}
+          </div>
         </Section>
 
-        {/* Selected Guest Reviews */}
-        <Section id="reviews" title="Selected Guest Reviews">
+        {/* Amenities — show first 12 then “Show all” */}
+        <Section title="Amenities">
+          {(() => {
+            const all = [
+              "Free Wi-Fi","Internet","Private living room","Essentials","Towels","Kitchen","Heating","Washer",
+              "Dryer","Air conditioning","Self check-in","Workspace","Smart TV","Microwave","Dishwasher","Coffee maker",
+              "Hair dryer","Iron","Elevator","Garden view","City view","Crib","High chair","Long stays allowed"
+            ];
+            const shown = showAllAmenities ? all : all.slice(0, 12);
+            return (
+              <>
+                <ul className="grid grid-cols-2 gap-2 text-ink sm:grid-cols-3">
+                  {shown.map(a => <li key={a}>{a}</li>)}
+                </ul>
+                <button
+                  className="mt-3 text-brand hover:text-ink text-sm"
+                  onClick={() => setShowAllAmenities(s => !s)}
+                >
+                  {showAllAmenities ? `Show fewer amenities` : `Show all ${all.length} amenities`}
+                </button>
+              </>
+            );
+          })()}
+        </Section>
+
+        {/* Available days — placeholder block to mirror layout */}
+        <Section title="Available days">
+          <div className="rounded-2xl border border-line bg-surface p-8 text-subtle">
+            Calendar integration placeholder
+          </div>
+        </Section>
+
+        {/* Reviews — Selected (approved) only */}
+        <Section id="reviews" title="Reviews">
           {approved.length === 0 ? (
             <p className="text-subtle">No approved reviews yet.</p>
           ) : (
             <>
-              <ul className="space-y-3">
-                {topApproved.map((r) => (
+              <ul className="space-y-4">
+                {approved.map((r) => (
                   <li key={r.id} className="rounded-2xl border border-line bg-surface p-4">
                     <p className="text-sm text-subtle">
-                      <span className="font-medium text-ink">{r.guestName}</span> • {formatWhen(r)}
+                      <span className="font-medium text-ink">{r.guestName}</span>
+                      <Bullet />
+                      <span>{formatWhen(r)}</span>
                       {r.channel && (
-                        <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-xs text-subtle">
+                        <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-xs">
                           {r.channel}
                         </span>
                       )}
                     </p>
-                    <p className="mt-2 leading-relaxed text-ink">{r.publicReview}</p>
-                    {!!r.reviewCategory?.length && (
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-subtle">
-                        {r.reviewCategory.map((c) => (
-                          <span key={c.category} className="rounded-full border border-line px-2 py-0.5">
-                            {c.category}: <b className="text-ink">{c.rating ?? '-'}</b>
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <p className="mt-2 leading-relaxed">{r.publicReview}</p>
                   </li>
                 ))}
               </ul>
-
-              {/* Link to full reviews page */}
-              {approved.length > TOP && (
-                <div className="mt-4">
-                  <a
-                    href={`/properties/${encodeURIComponent(slug)}/reviews`}
-                    className="inline-flex items-center rounded-xl border border-line bg-surface px-3 py-2 text-sm text-brand hover:text-ink"
-                  >
-                    See all {approved.length} reviews
-                  </a>
-                </div>
-              )}
+              <div className="mt-4">
+                <a
+                  href={`/properties/${encodeURIComponent(slug)}/reviews`}
+                  className="inline-flex items-center rounded-xl border border-line bg-surface px-3 py-2 text-sm text-brand hover:text-ink"
+                >
+                  See all reviews
+                </a>
+              </div>
             </>
           )}
         </Section>
 
-        {/* Amenities section (stub) */}
-        <Section title="Amenities">
-          <ul className="grid grid-cols-2 gap-2 text-ink sm:grid-cols-3">
-            <li>Self check-in</li><li>Fast Wi-Fi</li><li>Kitchenette</li>
-            <li>Workspace</li><li>Air conditioning</li><li>Washer/Dryer</li>
-          </ul>
+        {/* Good to know — mirror house rules & policy */}
+        <Section title="Good to know">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-line bg-surface p-3">
+              <div className="text-xs uppercase text-subtle">House Rules</div>
+              <div className="mt-1 text-ink">
+                Check-in: 3 pm<br/>Check-out: 10 am<br/>No pets · No smoking inside
+              </div>
+            </div>
+            <div className="rounded-xl border border-line bg-surface p-3">
+              <div className="text-xs uppercase text-subtle">Cancellation Policy</div>
+              <div className="mt-1 text-ink">
+                100% refund up to 14 days before arrival
+              </div>
+            </div>
+            <div className="rounded-xl border border-line bg-surface p-3">
+              <div className="text-xs uppercase text-subtle">Contact</div>
+              <div className="mt-1 text-ink">info@theflexliving.com</div>
+            </div>
+          </div>
         </Section>
       </div>
     </div>

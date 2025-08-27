@@ -1,4 +1,3 @@
-// src/app/properties/[slug]/page.tsx
 import PropertyDetailsClient from "./PropertyDetailsClient";
 
 export default async function Page(

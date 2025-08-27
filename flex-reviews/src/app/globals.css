@@ -1,54 +1,52 @@
 @import "tailwindcss";
 
-/* ---- Light theme tokens (no dark mode) ---- */
-:root {
-  /* App canvas vs. card surface */
-  --background: #ffffff;     /* page background (keep white or use #f8fafc for subtle tint) */
-  --foreground: #171717;     /* default text color */
+/* --- Light theme tokens (Flex-like green) --- */
+:root{
+  /* Page canvas vs card surface */
+  --background:#ffffff;
+  --surface:#ffffff;
 
-  /* Brand + UI neutrals */
-  --brand: #0f172a;          /* accent / links (deep slate) */
-  --ink: #0a0a0a;            /* headings/body emphasis */
-  --subtle: #6b7280;         /* captions/secondary text (slate-500) */
-  --surface: #ffffff;        /* cards/surfaces */
-  --line: #e5e7eb;           /* borders/dividers (gray-200) */
+  /* Text + brand */
+  --ink:#0e7c66;     /* BODY + headings (green) */
+  --brand:#0e7c66;   /* Links / accents (same for now) */
+
+  /* Neutrals */
+  --subtle:#6b7280;  /* captions/meta */
+  --line:#e5e7eb;    /* borders/dividers */
+
+  /* Fallback default text (will be overridden below via body) */
+  --foreground: var(--ink);
 }
 
-/* Map tokens into Tailwind (v4 @theme inline) */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme inline{
+  --color-background:var(--background);
+  --color-foreground:var(--ink);
+  --color-surface:var(--surface);
+  --color-line:var(--line);
+  --color-ink:var(--ink);
+  --color-brand:var(--brand);
+  --color-subtle:var(--subtle);
 
-  --color-brand: var(--brand);
-  --color-ink: var(--ink);
-  --color-subtle: var(--subtle);
-  --color-surface: var(--surface);
-  --color-line: var(--line);
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
-  --radius-card: 1rem;
-  --radius-pill: 9999px;
+  --font-sans:var(--font-geist-sans);
+  --font-mono:var(--font-geist-mono);
+  --radius-card:1rem;
+  --radius-pill:9999px;
 }
 
-/* Base element styles */
-html, body { height: 100%; }
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+/* Base */
+html,body{height:100%;}
+body{
+  background:var(--background);
+  color:var(--ink); /* <-- make all body text green */
+  font-family:var(--font-sans, Arial, Helvetica, sans-serif);
 }
 
-/* Optional: consistent checkbox/radio accent using brand */
-input[type="checkbox"],
-input[type="radio"] {
-  accent-color: var(--brand);
-}
+/* Make anchors use brand (same green) and underline on hover */
+a{ color:var(--brand); text-decoration:none; }
+a:hover{ text-decoration:underline; }
 
-/* Optional: nicer focus ring for a11y */
-:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--brand) 60%, white);
-  outline-offset: 2px;
-}
+/* Inputs accent */
+input[type="checkbox"],input[type="radio"]{ accent-color:var(--brand); }
+
+/* Focus ring */
+:focus-visible{ outline:2px solid color-mix(in oklab, var(--brand) 60%, white); outline-offset:2px; }
