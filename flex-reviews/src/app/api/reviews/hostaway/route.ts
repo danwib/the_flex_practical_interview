@@ -13,7 +13,7 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 const trim = (s: string) => s.trim().replace(/\s+/g, ' ');
 
 // Allow list (optional – we still accept unknowns)
-const ALLOWED_CATEGORIES = new Set([
+const _ALLOWED_CATEGORIES = new Set([
   'cleanliness', 'communication', 'respect_house_rules', 'check_in', 'accuracy', 'location', 'value',
 ]);
 
