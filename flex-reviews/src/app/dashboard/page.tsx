@@ -107,22 +107,55 @@ export default function DashboardPage() {
   const inputCls =
     'w-full bg-surface border border-line rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand/30';
 
+  // --- NEW: Public view quick-nav ---
+  const [publicListing, setPublicListing] = useState<string>('');
+  const openPublicPage = () => {
+    if (!publicListing) return;
+    const href = `/properties/${encodeURIComponent(publicListing)}/reviews`;
+    window.open(href, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="p-6 space-y-4">
-      {/* Title */}
-      <div className="flex items-end justify-between">
+      {/* Title row with stats and NEW public view dropdown */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <h1 className="text-2xl font-semibold text-ink">Manager Reviews Dashboard</h1>
-        {/* Quick counters */}
-        <div className="hidden sm:flex gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
-            Total: <b className="text-ink">{total}</b>
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
-            Approved: <b className="text-ink">{approvedCount}</b>
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
-            Avg rating: <b className="text-ink">{avgRating ?? '–'}</b>
-          </span>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
+          {/* Quick counters */}
+          <div className="flex gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
+              Total: <b className="text-ink">{total}</b>
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
+              Approved: <b className="text-ink">{approvedCount}</b>
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
+              Avg rating: <b className="text-ink">{avgRating ?? '–'}</b>
+            </span>
+          </div>
+
+          {/* NEW: Public view quick-nav */}
+          <div className="flex items-center gap-2">
+            <select
+              className={inputCls}
+              value={publicListing}
+              onChange={(e) => setPublicListing(e.target.value)}
+              aria-label="Choose listing to view public reviews"
+            >
+              <option value="">Public view: choose listing…</option>
+              {listings.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+            <button
+              onClick={openPublicPage}
+              disabled={!publicListing}
+              className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-brand hover:text-ink disabled:opacity-50"
+              aria-label="Open public reviews page in a new tab"
+              title={publicListing ? `Open public page for ${publicListing}` : 'Select a listing'}
+            >
+              Open
+            </button>
+          </div>
         </div>
       </div>
 
