@@ -221,9 +221,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="rounded-2xl border border-line bg-surface max-h-[calc(100vh-200px)] overflow-auto">
         <table className="w-full text-sm">
-          <thead className="text-left border-b border-line bg-surface sticky top-0 z-0">
+          <thead className="text-left border-b border-line bg-surface sticky top-0 z-10">
             <tr className="text-xs uppercase tracking-wide text-subtle">
               <th className="py-3 px-3">Approve</th>
               <th className="px-3">Listing</th>
