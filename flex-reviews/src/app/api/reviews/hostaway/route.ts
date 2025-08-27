@@ -1,275 +1,321 @@
 // src/app/api/reviews/hostaway/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import raw from '@/../data/mock-reviews.json';
-import type { Review, ReviewsResponse } from '@/types/reviews';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs"; // we need fs + outbound fetch on the server
 
-// ---------- helpers ----------
-const toIsoLike = (s: string) => s.replace(' ', 'T'); // "YYYY-MM-DD HH:mm:ss" → "YYYY-MM-DDTHH:mm:ss"
-const safeDate = (s?: string | null) => (s ? new Date(s) : undefined);
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-const trim = (s: string) => s.trim().replace(/\s+/g, ' ');
-const parseCsvLower = (s: string | null) =>
-  s ? s.split(',').map(x => x.trim().toLowerCase()).filter(Boolean) : null;
-
-// ---------- Zod schemas (lenient, with defaults) ----------
-const CatZ = z.object({
-  category: z.string().min(1),
-  rating: z.number().int().min(0).max(10).nullable().optional(),
-});
-
-const ReviewZ = z.object({
-  id: z.number().int(),
-  type: z.string().default('guest-to-host'),
-  status: z.string().default('published'),
-  channel: z.string().optional().default('Direct'),          // NEW
-  approved: z.boolean().optional().default(false),            // NEW
-  rating: z.number().int().min(0).max(10).nullable().optional(),
-  publicReview: z.string().default(''),
-  reviewCategory: z.array(CatZ).default([]),
-  submittedAt: z.string().min(10), // will be parsed later
-  guestName: z.string().default('Guest'),
-  listingName: z.string().default('Unknown listing'),
-});
-
-type ZReview = z.infer<typeof ReviewZ>;
-
-// Validate an unknown array into typed reviews; drop invalid records
-function validate(rawArr: unknown): ZReview[] {
-  const arr = Array.isArray(rawArr) ? rawArr : [];
-  const ok: ZReview[] = [];
-  for (const r of arr) {
-    const parsed = ReviewZ.safeParse(r);
-    if (parsed.success) ok.push(parsed.data);
-  }
-  return ok;
-}
-
-// Local API shape: extend base Review with optional fields we're adding
-type ApiReview = Review & {
-  channel?: string;
-  approved?: boolean;
-  type?: string;
-  status?: string;
+// ---------- Types ----------
+type CategoryRating = { category: string; rating: number | null };
+type Review = {
+  id: number | string;
+  type?: string;            // "guest-to-host" | "host-to-guest"
+  status?: string;          // "published" | ...
+  channel?: string;         // "Airbnb" | "Booking" | "Direct" | ...
+  rating: number | null;    // overall (nullable)
+  publicReview: string;
+  reviewCategory: CategoryRating[];
+  submittedAt: string;      // "YYYY-MM-DD HH:mm:ss" (Hostaway-ish)
+  submittedAtIso?: string;  // ISO string if we have it
+  submittedAtTs?: number;   // epoch ms if we have it
+  guestName: string;
+  listingName: string;
+  approved?: boolean;       // optional (we keep using localStorage in the UI for demo)
 };
 
-// Normalise values for resilience (trim strings, clamp ratings, safe ISO dates)
-function normalize(r: ZReview): ApiReview {
-  const normCats = (r.reviewCategory ?? []).map((c) => ({
-    category: trim(c.category),
-    rating: c.rating == null ? null : clamp(c.rating, 0, 10),
-  }));
+// ---------- Env / toggles ----------
+const BASE_URL = process.env.HOSTAWAY_BASE_URL || "https://api.hostaway.com";
+const ACCOUNT_ID = process.env.HOSTAWAY_ACCOUNT_ID;
+const API_KEY = process.env.HOSTAWAY_API_KEY;
 
-  const parsed = new Date(toIsoLike(r.submittedAt));
-  const iso =
-    Number.isNaN(parsed.getTime())
-      ? new Date(0).toISOString() // sentinel date
-      : parsed.toISOString();
+const USE_LIVE = !!(ACCOUNT_ID && API_KEY);
 
-  return {
-    id: r.id,
-    type: r.type || 'guest-to-host',
-    status: r.status || 'published',
-    channel: r.channel ? trim(r.channel) : 'Direct',   // NEW
-    approved: Boolean(r.approved),                     // NEW
-    rating: r.rating == null ? null : clamp(r.rating, 0, 10),
-    publicReview: r.publicReview || '',
-    reviewCategory: normCats,
-    submittedAt: iso, // store ISO for consistent comparisons
-    guestName: trim(r.guestName || 'Guest'),
-    listingName: trim(r.listingName || 'Unknown listing'),
-  };
+// ---------- Mock loader (fallback) ----------
+let MOCK_CACHE: Review[] | null = null;
+function loadMock(): Review[] {
+  if (MOCK_CACHE) return MOCK_CACHE;
+  const file = path.join(process.cwd(), "data", "mock-reviews.json");
+  const raw = fs.readFileSync(file, "utf8");
+  const json = JSON.parse(raw);
+  MOCK_CACHE = (json?.result ?? []) as Review[];
+  return MOCK_CACHE;
 }
 
-// Remove duplicate IDs (keep first occurrence)
-function dedupeById(rows: ApiReview[]): ApiReview[] {
-  const seen = new Set<number>();
-  const out: ApiReview[] = [];
-  for (const r of rows) {
-    if (!seen.has(r.id)) {
-      seen.add(r.id);
-      out.push(r);
-    }
+// ---------- Utilities ----------
+function toEpochMs(r: Review): number {
+  if (typeof r.submittedAtTs === "number" && Number.isFinite(r.submittedAtTs)) return r.submittedAtTs;
+  if (r.submittedAtIso) {
+    const t = Date.parse(r.submittedAtIso);
+    if (!Number.isNaN(t)) return t;
   }
-  return out;
+  const isoGuess = r.submittedAt.includes(" ") ? r.submittedAt.replace(" ", "T") + "Z" : r.submittedAt;
+  const t2 = Date.parse(isoGuess);
+  return Number.isNaN(t2) ? 0 : t2;
+}
+function parseNumber(s: string | null): number | null {
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+function parseCsvLower(s: string | null): string[] | null {
+  if (!s) return null;
+  return s.split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+}
+function icaseEq(a: string, b: string) {
+  return a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
+}
+async function safeText(res: Response) {
+  try { return await res.text(); } catch { return "<no body>"; }
 }
 
-// Optional live fetch (defaults to mock)
-const HOSTAWAY_ACCOUNT_ID = process.env.HOSTAWAY_ACCOUNT_ID;
-const HOSTAWAY_API_KEY = process.env.HOSTAWAY_API_KEY;
+// ---------- Token cache (module-scope; survives warm invocations) ----------
+let tokenCache: { token: string; exp: number } | null = null;
 
-async function fetchReviews(): Promise<ApiReview[]> {
-  // Live path (optional)
-  if (HOSTAWAY_ACCOUNT_ID && HOSTAWAY_API_KEY) {
-    const url = `https://api.hostaway.com/v1/reviews?accountId=${encodeURIComponent(
-      HOSTAWAY_ACCOUNT_ID,
-    )}`;
+async function getHostawayToken(): Promise<string> {
+  if (!USE_LIVE) throw new Error("LIVE_DISABLED");
 
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${HOSTAWAY_API_KEY}` },
-      // revalidate disabled: we read on-demand
-      cache: 'no-store',
-    });
+  const now = Date.now();
+  if (tokenCache && now < tokenCache.exp) return tokenCache.token;
 
-    if (!res.ok) {
-      // In production you might log this
-      throw new Error(`Hostaway API error: ${res.status}`);
-    }
-    const json = (await res.json()) as ReviewsResponse;
-    return dedupeById(validate(json?.result).map(normalize));
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: String(ACCOUNT_ID), // Account ID
+    client_secret: String(API_KEY), // API key
+    scope: "general",
+  });
+
+  const r = await fetch(`${BASE_URL}/v1/accessTokens`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Cache-Control": "no-cache",
+    },
+    body,
+  });
+
+  if (!r.ok) {
+    throw new Error(`token:${r.status} ${await safeText(r)}`);
   }
 
-  // Mock path (default)
-  const parsed = raw as unknown as ReviewsResponse;
-  return dedupeById(validate(parsed?.result).map(normalize));
+  const j = await r.json(); // { access_token, token_type, expires_in }
+  const exp = now + Math.max(0, (Number(j.expires_in ?? 3600) - 60) * 1000); // refresh 1 min early
+  tokenCache = { token: j.access_token, exp };
+  return j.access_token;
 }
 
-// ---------- API ----------
-type ReviewsApiSuccess = {
-  status: 'success';
-  result: ApiReview[]; // CHANGED to include extended fields in API
-  total: number;
-  page: number;
-  limit: number;
-};
-type ReviewsApiError = { status: 'error'; message: string };
+// ---------- Fetch live reviews and normalize ----------
+async function fetchLiveReviews(): Promise<Review[]> {
+  const token = await getHostawayToken();
 
+  // If pagination exists, you can loop pages. For the assessment, a single page is fine.
+  const url = new URL(`${BASE_URL}/v1/reviews`);
+  // Example: url.searchParams.set('limit', '200');
+
+  const r = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Cache-Control": "no-cache",
+    },
+  });
+
+  if (!r.ok) {
+    throw new Error(`reviews:${r.status} ${await safeText(r)}`);
+  }
+
+  const data = await r.json();
+  const arr = Array.isArray(data?.result) ? data.result : (Array.isArray(data) ? data : []);
+
+  // ---- NORMALIZE to our Review shape ----
+  const rows: Review[] = arr.map((x: any): Review => {
+    // IDs
+    const id = x.id ?? x.reviewId ?? x._id ?? x.uuid ?? cryptoRandomId();
+
+    // People / property
+    const listingName =
+      x.listingName ?? x.propertyName ?? x.listing?.name ?? x.property?.name ?? "Unknown Property";
+    const guestName =
+      x.guestName ?? x.reviewerName ?? x.guest?.name ?? x.authorName ?? "Guest";
+
+    // Text and status
+    const publicReview = x.publicReview ?? x.review ?? x.comment ?? x.text ?? "";
+    const status = x.status ?? "published";
+
+    // Channel & type
+    const channel =
+      x.channel ?? x.source ?? x.platform ?? (x.channelId ? `channel:${x.channelId}` : undefined);
+    const type = x.type ?? x.direction ?? undefined;
+
+    // Overall rating (nullable)
+    const rating =
+      x.rating ?? x.overallRating ?? (Number.isFinite(x.score) ? Number(x.score) : null) ?? null;
+
+    // Categories (array or object)
+    let reviewCategory: CategoryRating[] = [];
+    if (Array.isArray(x.reviewCategory)) {
+      reviewCategory = x.reviewCategory.map((c: any) => ({
+        category: String(c.category),
+        rating: c.rating == null ? null : Number(c.rating),
+      }));
+    } else if (x.categories && typeof x.categories === "object") {
+      reviewCategory = Object.entries(x.categories).map(([category, val]) => ({
+        category,
+        rating: val == null ? null : Number(val),
+      }));
+    }
+
+    // Dates
+    const iso =
+      x.submittedAtIso ?? x.createdAt ?? x.date ?? x.created ?? x.updatedAt ?? null;
+    const submittedAt =
+      x.submittedAt ??
+      (iso ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") : "1970-01-01 00:00:00");
+
+    // Approved flag (if any upstream hint)
+    const approved =
+      x.approved ??
+      x.isApproved ??
+      (x.visibility === "public" ? true : undefined);
+
+    return {
+      id,
+      type,
+      status,
+      channel,
+      rating,
+      publicReview,
+      reviewCategory,
+      submittedAt,
+      submittedAtIso: iso ?? undefined,
+      submittedAtTs: iso ? Date.parse(iso) : undefined,
+      guestName,
+      listingName,
+      approved,
+    };
+  });
+
+  return rows;
+}
+
+// Fallback ID if upstream lacks it
+function cryptoRandomId() {
+  // Not crypto-secure in all environments, but sufficient as a fallback ID for demo
+  return Math.random().toString(36).slice(2);
+}
+
+// ---------- Main handler ----------
 export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+
+  const listing = searchParams.get("listing");
+  const q = searchParams.get("q");
+
+  const category = searchParams.get("category");
+  const min = parseNumber(searchParams.get("min"));
+
+  const types = parseCsvLower(searchParams.get("type"));
+  const channels = parseCsvLower(searchParams.get("channel"));
+  const approvedOnly = searchParams.get("approvedOnly") === "true";
+
+  const fromStr = searchParams.get("from");
+  const toStr = searchParams.get("to");
+  const fromMs = fromStr ? Date.parse(fromStr) : null;
+  const toMs = toStr ? Date.parse(toStr) : null;
+
+  const sort = (searchParams.get("sort") || "").toLowerCase();       // "date" | "rating"
+  const order = (searchParams.get("order") || "desc").toLowerCase(); // "asc" | "desc"
+
+  let rows: Review[] = [];
+  let source = "mock";
+
   try {
-    const { searchParams } = new URL(req.url);
-
-    // Existing query params
-    const listing = searchParams.get('listing'); // exact match on listingName
-    const q = searchParams.get('q'); // text search in publicReview/guestName/listing
-    const cat = searchParams.get('category'); // category name
-    const minStr = searchParams.get('min'); // min category rating
-    const from = searchParams.get('from'); // YYYY-MM-DD
-    const to = searchParams.get('to'); // YYYY-MM-DD
-    const sortByRaw = searchParams.get('sortBy') || '-submittedAt'; // existing contract
-
-    // Pagination (existing)
-    const page = Math.max(1, Number(searchParams.get('page') || 1));
-    const limit = clamp(Number(searchParams.get('limit') || 25), 1, 100);
-
-    const min = minStr !== null ? Number(minStr) : null;
-
-    // NEW query params (non-breaking additions)
-    const typesCsv = parseCsvLower(searchParams.get('type'));        // e.g. "guest-to-host,host-to-guest"
-    const channelsCsv = parseCsvLower(searchParams.get('channel'));  // e.g. "Airbnb,Direct"
-    const approvedOnly = searchParams.get('approvedOnly') === 'true';
-
-    // Optional alt sort controls (map to existing sortBy)
-    // sort=date|rating, order=asc|desc
-    const sortAlt = (searchParams.get('sort') || '').toLowerCase();
-    const orderAlt = (searchParams.get('order') || '').toLowerCase();
-    let sortBy = sortByRaw; // keep original default/behavior
-    if (sortAlt === 'date') {
-      sortBy = orderAlt === 'asc' ? 'submittedAt' : '-submittedAt';
-    } else if (sortAlt === 'rating') {
-      sortBy = orderAlt === 'asc' ? 'rating' : '-rating';
-    }
-
-    // Load + normalise
-    const all = await fetchReviews();
-
-    // Default: published only (change if you need drafts)
-    let rows = all.filter((r) => (r.status ?? 'published') === 'published');
-
-    // Filters (existing)
-    if (listing) rows = rows.filter((r) => r.listingName === listing);
-
-    if (q) {
-      const s = q.toLowerCase();
-      rows = rows.filter(
-        (r) =>
-          r.publicReview.toLowerCase().includes(s) ||
-          r.guestName.toLowerCase().includes(s) ||
-          r.listingName.toLowerCase().includes(s),
-      );
-    }
-
-    if (cat) {
-      // accept unknown categories too; if you want to enforce allowed set, also check ALLOWED_CATEGORIES.has(cat)
-      rows = rows.filter((r) => r.reviewCategory?.some((c) => c.category === cat));
-      if (min !== null && !Number.isNaN(min)) {
-        rows = rows.filter((r) =>
-          r.reviewCategory?.some(
-            (c) => c.category === cat && (c.rating ?? -Infinity) >= min,
-          ),
-        );
+    if (USE_LIVE) {
+      const live = await fetchLiveReviews();
+      if (Array.isArray(live) && live.length > 0) {
+        rows = live.slice();
+        source = "live";
+      } else {
+        rows = loadMock().slice();
+        source = "live-empty-fallback";
       }
+    } else {
+      rows = loadMock().slice();
+      source = "mock";
     }
-
-    // NEW: type filter
-    if (typesCsv && typesCsv.length > 0) {
-      rows = rows.filter((r) => r.type && typesCsv.includes(String(r.type).toLowerCase()));
-    }
-
-    // NEW: channel filter
-    if (channelsCsv && channelsCsv.length > 0) {
-      rows = rows.filter((r) => r.channel && channelsCsv.includes(String(r.channel).toLowerCase()));
-    }
-
-    // NEW: approvedOnly filter
-    if (approvedOnly) {
-      rows = rows.filter((r) => r.approved === true);
-    }
-
-    // Hardened date filtering (ISO stored in submittedAt)
-    if (from) {
-      const f = safeDate(`${from}T00:00:00`);
-      if (f && !Number.isNaN(f.getTime())) {
-        rows = rows.filter((r) => {
-          const d = new Date(r.submittedAt);
-          return !Number.isNaN(d.getTime()) && d >= f;
-        });
-      }
-    }
-    if (to) {
-      const t = safeDate(`${to}T23:59:59`);
-      if (t && !Number.isNaN(t.getTime())) {
-        rows = rows.filter((r) => {
-          const d = new Date(r.submittedAt);
-          return !Number.isNaN(d.getTime()) && d <= t;
-        });
-      }
-    }
-
-    // Sorting (existing, with mapped sortBy)
-    const key = sortBy.startsWith('-') ? sortBy.slice(1) : sortBy;
-    const dir = sortBy.startsWith('-') ? -1 : 1;
-    rows.sort((a, b) => {
-      const av =
-        key === 'submittedAt'
-          ? new Date(a.submittedAt).getTime()
-          : (a.rating ?? -1);
-      const bv =
-        key === 'submittedAt'
-          ? new Date(b.submittedAt).getTime()
-          : (b.rating ?? -1);
-      return (av - bv) * dir;
-    });
-
-    // Pagination (existing)
-    const total = rows.length;
-    const start = (page - 1) * limit;
-    rows = rows.slice(start, start + limit);
-
-    const payload: ReviewsApiSuccess = {
-      status: 'success',
-      result: rows,
-      total,
-      page,
-      limit,
-    };
-    return NextResponse.json(payload, { status: 200 });
-  } catch (err) {
-    const payload: ReviewsApiError = {
-      status: 'error',
-      message: err instanceof Error ? err.message : 'Unknown error',
-    };
-    return NextResponse.json(payload, { status: 500 });
+  } catch (e) {
+    console.warn("Hostaway error → mock fallback:", e);
+    rows = loadMock().slice();
+    source = "live-error-fallback";
   }
+
+  // listing filter (exact, case-insensitive)
+  if (listing) {
+    rows = rows.filter((r) => icaseEq(r.listingName, listing));
+  }
+
+  // free text filter
+  if (q) {
+    const needle = q.toLowerCase();
+    rows = rows.filter((r) => {
+      const hay = `${r.guestName} ${r.listingName} ${r.publicReview}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  }
+
+  // type filter
+  if (types && types.length > 0) {
+    rows = rows.filter((r) => (r.type ? types.includes(r.type.toLowerCase()) : false));
+  }
+
+  // channel filter
+  if (channels && channels.length > 0) {
+    rows = rows.filter((r) => (r.channel ? channels.includes(r.channel.toLowerCase()) : false));
+  }
+
+  // category + min filter
+  if (category) {
+    rows = rows.filter((r) => {
+      const hit = r.reviewCategory?.find((c) => c.category === category);
+      if (!hit) return false;
+      if (min === null) return hit.rating !== null; // if no min, just require a value
+      return typeof hit.rating === "number" && hit.rating >= min;
+    });
+  }
+
+  // approvedOnly
+  if (approvedOnly) {
+    rows = rows.filter((r) => r.approved === true);
+  }
+
+  // date range (inclusive)
+  rows = rows.filter((r) => {
+    const t = toEpochMs(r);
+    if (fromMs !== null && !Number.isNaN(fromMs) && t < fromMs) return false;
+    if (toMs !== null && !Number.isNaN(toMs) && t > toMs) return false;
+    return true;
+  });
+
+  // sorting
+  if (sort === "date") {
+    rows.sort((a, b) => toEpochMs(a) - toEpochMs(b));
+  } else if (sort === "rating") {
+    rows.sort((a, b) => {
+      const A = a.rating;
+      const B = b.rating;
+      if (A == null && B == null) return 0;
+      if (A == null) return 1;
+      if (B == null) return -1;
+      return A - B;
+    });
+  }
+  if (order === "desc") rows.reverse();
+
+  return NextResponse.json(
+    { status: "success", result: rows },
+    {
+      headers: {
+        "Cache-Control": "s-maxage=120, stale-while-revalidate=60",
+        "x-source": source,
+      },
+    }
+  );
 }
