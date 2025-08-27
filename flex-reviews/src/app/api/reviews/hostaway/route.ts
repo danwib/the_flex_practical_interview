@@ -3,32 +3,82 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 
-export const runtime = "nodejs";   // ✅ Force Node runtime (fs allowed)
-export const revalidate = 0;       // ✅ Dynamic; don't pre-render or statically analyze
+export const runtime = "nodejs";   // Node runtime (fs allowed)
+export const revalidate = 0;       // Dynamic; no prerender
 
 // ---------- Types ----------
 type CategoryRating = { category: string; rating: number | null };
 type Review = {
   id: number | string;
-  type?: string;            // "guest-to-host" | "host-to-guest"
-  status?: string;          // "published" | ...
-  channel?: string;         // "Airbnb" | "Booking" | "Direct" | ...
-  rating: number | null;    // overall (nullable)
+  type?: string;
+  status?: string;
+  channel?: string;
+  rating: number | null;
   publicReview: string;
   reviewCategory: CategoryRating[];
-  submittedAt: string;      // "YYYY-MM-DD HH:mm:ss" (Hostaway-ish)
-  submittedAtIso?: string;  // ISO string if we have it
-  submittedAtTs?: number;   // epoch ms if we have it
+  submittedAt: string;
+  submittedAtIso?: string;
+  submittedAtTs?: number;
   guestName: string;
   listingName: string;
-  approved?: boolean;       // optional (UI still uses localStorage for demo)
+  approved?: boolean;
+};
+
+// A flexible upstream shape we can safely normalize from
+type HostawayReviewLike = {
+  id?: number | string;
+  reviewId?: number | string;
+  _id?: string;
+  uuid?: string;
+
+  listingName?: string;
+  propertyName?: string;
+  listing?: { name?: string } | null;
+  property?: { name?: string } | null;
+
+  guestName?: string;
+  reviewerName?: string;
+  guest?: { name?: string } | null;
+  authorName?: string;
+
+  publicReview?: string;
+  review?: string;
+  comment?: string;
+  text?: string;
+
+  status?: string;
+
+  channel?: string;
+  source?: string;
+  platform?: string;
+  channelId?: string | number;
+
+  type?: string;
+  direction?: string;
+
+  rating?: number;
+  overallRating?: number;
+  score?: number;
+
+  reviewCategory?: Array<{ category?: unknown; rating?: unknown }>;
+  categories?: Record<string, unknown>;
+
+  submittedAtIso?: string;
+  createdAt?: string;
+  date?: string;
+  created?: string;
+  updatedAt?: string;
+  submittedAt?: string;
+
+  approved?: boolean;
+  isApproved?: boolean;
+  visibility?: string;
 };
 
 // ---------- Env / toggles ----------
 const BASE_URL = process.env.HOSTAWAY_BASE_URL || "https://api.hostaway.com";
 const ACCOUNT_ID = process.env.HOSTAWAY_ACCOUNT_ID;
 const API_KEY = process.env.HOSTAWAY_API_KEY;
-
 const USE_LIVE = !!(ACCOUNT_ID && API_KEY);
 
 // ---------- Mock loader (fallback) ----------
@@ -65,9 +115,23 @@ function parseCsvLower(s: string | null): string[] | null {
 function icaseEq(a: string, b: string) {
   return a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
 }
-// Avoid DOM typings in some TS passes
-async function safeText(res: any) {
+
+// Avoid `any`: only require the .text() method used by safeText
+type HasTextMethod = { text: () => Promise<string> };
+async function safeText(res: HasTextMethod): Promise<string> {
   try { return await res.text(); } catch { return "<no body>"; }
+}
+
+function isRecord(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null;
+}
+
+function getResultArray(v: unknown): unknown[] {
+  if (Array.isArray(v)) return v;
+  if (isRecord(v) && Array.isArray((v as { result?: unknown[] }).result)) {
+    return (v as { result: unknown[] }).result;
+  }
+  return [];
 }
 
 // ---------- Token cache (module-scope; survives warm invocations) ----------
@@ -81,8 +145,8 @@ async function getHostawayToken(): Promise<string> {
 
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    client_id: String(ACCOUNT_ID), // Account ID
-    client_secret: String(API_KEY), // API key
+    client_id: String(ACCOUNT_ID),
+    client_secret: String(API_KEY),
     scope: "general",
   });
 
@@ -96,97 +160,99 @@ async function getHostawayToken(): Promise<string> {
   });
 
   if (!r.ok) {
-    throw new Error(`token:${r.status} ${await safeText(r)}`);
+    throw new Error(`token:${r.status} ${await safeText(r as HasTextMethod)}`);
   }
 
-  const j = await r.json(); // { access_token, token_type, expires_in }
-  const exp = now + Math.max(0, (Number(j.expires_in ?? 3600) - 60) * 1000); // refresh 1 min early
+  const j = (await r.json()) as { access_token: string; expires_in?: number };
+  const exp = now + Math.max(0, (Number(j.expires_in ?? 3600) - 60) * 1000);
   tokenCache = { token: j.access_token, exp };
   return j.access_token;
 }
 
-// ---------- Fetch live reviews and normalize ----------
-async function fetchLiveReviews(): Promise<Review[]> {
-  const token = await getHostawayToken();
+// ---------- Live fetch + normalize ----------
+function normalizeHostaway(raw: HostawayReviewLike): Review {
+  const id =
+    raw.id ?? raw.reviewId ?? raw._id ?? raw.uuid ?? Math.random().toString(36).slice(2);
 
-  // If pagination exists, you can loop pages. For the assessment, a single page is enough.
-  const url = new URL(`${BASE_URL}/v1/reviews`);
+  const listingName =
+    raw.listingName ??
+    raw.propertyName ??
+    raw.listing?.name ??
+    raw.property?.name ??
+    "Unknown Property";
 
-  const r = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Cache-Control": "no-cache",
-    },
-  });
+  const guestName =
+    raw.guestName ??
+    raw.reviewerName ??
+    raw.guest?.name ??
+    raw.authorName ??
+    "Guest";
 
-  if (!r.ok) {
-    throw new Error(`reviews:${r.status} ${await safeText(r)}`);
+  const publicReview = raw.publicReview ?? raw.review ?? raw.comment ?? raw.text ?? "";
+  const status = raw.status ?? "published";
+
+  const channel =
+    raw.channel ?? raw.source ?? raw.platform ?? (raw.channelId ? `channel:${raw.channelId}` : undefined);
+  const type = raw.type ?? raw.direction ?? undefined;
+
+  const rating =
+    raw.rating ??
+    raw.overallRating ??
+    (Number.isFinite(raw.score as number) ? Number(raw.score) : null) ??
+    null;
+
+  let reviewCategory: CategoryRating[] = [];
+  if (Array.isArray(raw.reviewCategory)) {
+    reviewCategory = (raw.reviewCategory as Array<{ category?: unknown; rating?: unknown }>).map((c) => ({
+      category: String(c.category ?? ""),
+      rating: c.rating == null ? null : Number(c.rating),
+    })).filter(cr => cr.category.length > 0);
+  } else if (raw.categories && isRecord(raw.categories)) {
+    reviewCategory = Object.entries(raw.categories).map(([category, val]) => ({
+      category,
+      rating: val == null ? null : Number(val),
+    }));
   }
 
-  const data = await r.json();
-  const arr = Array.isArray(data?.result) ? data.result : (Array.isArray(data) ? data : []);
+  const iso =
+    raw.submittedAtIso ?? raw.createdAt ?? raw.date ?? raw.created ?? raw.updatedAt ?? undefined;
+  const submittedAt =
+    raw.submittedAt ??
+    (iso ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") : "1970-01-01 00:00:00");
 
-  // ---- Normalize to our Review shape ----
-  const rows: Review[] = arr.map((x: any): Review => {
-    const id = x.id ?? x.reviewId ?? x._id ?? x.uuid ?? Math.random().toString(36).slice(2);
+  const approved =
+    raw.approved ??
+    raw.isApproved ??
+    (raw.visibility === "public" ? true : undefined);
 
-    const listingName =
-      x.listingName ?? x.propertyName ?? x.listing?.name ?? x.property?.name ?? "Unknown Property";
-    const guestName =
-      x.guestName ?? x.reviewerName ?? x.guest?.name ?? x.authorName ?? "Guest";
+  return {
+    id,
+    type,
+    status,
+    channel,
+    rating,
+    publicReview,
+    reviewCategory,
+    submittedAt,
+    submittedAtIso: iso,
+    submittedAtTs: iso ? Date.parse(iso) : undefined,
+    guestName,
+    listingName,
+    approved,
+  };
+}
 
-    const publicReview = x.publicReview ?? x.review ?? x.comment ?? x.text ?? "";
-    const status = x.status ?? "published";
-
-    const channel =
-      x.channel ?? x.source ?? x.platform ?? (x.channelId ? `channel:${x.channelId}` : undefined);
-    const type = x.type ?? x.direction ?? undefined;
-
-    const rating =
-      x.rating ?? x.overallRating ?? (Number.isFinite(x.score) ? Number(x.score) : null) ?? null;
-
-    let reviewCategory: CategoryRating[] = [];
-    if (Array.isArray(x.reviewCategory)) {
-      reviewCategory = x.reviewCategory.map((c: any) => ({
-        category: String(c.category),
-        rating: c.rating == null ? null : Number(c.rating),
-      }));
-    } else if (x.categories && typeof x.categories === "object") {
-      reviewCategory = Object.entries(x.categories).map(([category, val]) => ({
-        category,
-        rating: val == null ? null : Number(val),
-      }));
-    }
-
-    const iso =
-      x.submittedAtIso ?? x.createdAt ?? x.date ?? x.created ?? x.updatedAt ?? null;
-    const submittedAt =
-      x.submittedAt ??
-      (iso ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") : "1970-01-01 00:00:00");
-
-    const approved =
-      x.approved ??
-      x.isApproved ??
-      (x.visibility === "public" ? true : undefined);
-
-    return {
-      id,
-      type,
-      status,
-      channel,
-      rating,
-      publicReview,
-      reviewCategory,
-      submittedAt,
-      submittedAtIso: iso ?? undefined,
-      submittedAtTs: iso ? Date.parse(iso) : undefined,
-      guestName,
-      listingName,
-      approved,
-    };
+async function fetchLiveReviews(): Promise<Review[]> {
+  const token = await getHostawayToken();
+  const r = await fetch(`${BASE_URL}/v1/reviews`, {
+    headers: { Authorization: `Bearer ${token}`, "Cache-Control": "no-cache" },
   });
-
-  return rows;
+  if (!r.ok) {
+    throw new Error(`reviews:${r.status} ${await safeText(r as HasTextMethod)}`);
+  }
+  const data = await r.json() as unknown;
+  const arrUnknown = getResultArray(data);
+  return arrUnknown.map((u) => normalizeHostaway(u as HostawayReviewLike));
 }
 
 // ---------- Main handler ----------
@@ -217,13 +283,8 @@ export async function GET(req: NextRequest) {
   try {
     if (USE_LIVE) {
       const live = await fetchLiveReviews();
-      if (Array.isArray(live) && live.length > 0) {
-        rows = live.slice();
-        source = "live";
-      } else {
-        rows = loadMock().slice();
-        source = "live-empty-fallback";
-      }
+      if (live.length > 0) { rows = live.slice(); source = "live"; }
+      else { rows = loadMock().slice(); source = "live-empty-fallback"; }
     } else {
       rows = loadMock().slice();
       source = "mock";
