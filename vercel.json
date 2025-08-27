@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "rootDirectory": "flex-reviews",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": ".next"
+}
