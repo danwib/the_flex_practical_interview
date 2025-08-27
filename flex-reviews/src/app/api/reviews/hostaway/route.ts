@@ -1,13 +1,10 @@
 // src/app/api/reviews/hostaway/route.ts
-
-export const runtime = 'nodejs';          // ✅ ensure Node serverless, not Edge
-export const dynamic = 'force-dynamic';   // ✅ don’t pre-render / statically analyze
-
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
-export const runtime = "nodejs"; // we need fs + outbound fetch on the server
+export const runtime = "nodejs";   // ✅ Force Node runtime (fs allowed)
+export const revalidate = 0;       // ✅ Dynamic; don't pre-render or statically analyze
 
 // ---------- Types ----------
 type CategoryRating = { category: string; rating: number | null };
@@ -24,7 +21,7 @@ type Review = {
   submittedAtTs?: number;   // epoch ms if we have it
   guestName: string;
   listingName: string;
-  approved?: boolean;       // optional (we keep using localStorage in the UI for demo)
+  approved?: boolean;       // optional (UI still uses localStorage for demo)
 };
 
 // ---------- Env / toggles ----------
@@ -68,6 +65,7 @@ function parseCsvLower(s: string | null): string[] | null {
 function icaseEq(a: string, b: string) {
   return a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
 }
+// Avoid DOM typings in some TS passes
 async function safeText(res: any) {
   try { return await res.text(); } catch { return "<no body>"; }
 }
@@ -111,9 +109,8 @@ async function getHostawayToken(): Promise<string> {
 async function fetchLiveReviews(): Promise<Review[]> {
   const token = await getHostawayToken();
 
-  // If pagination exists, you can loop pages. For the assessment, a single page is fine.
+  // If pagination exists, you can loop pages. For the assessment, a single page is enough.
   const url = new URL(`${BASE_URL}/v1/reviews`);
-  // Example: url.searchParams.set('limit', '200');
 
   const r = await fetch(url.toString(), {
     headers: {
@@ -129,31 +126,25 @@ async function fetchLiveReviews(): Promise<Review[]> {
   const data = await r.json();
   const arr = Array.isArray(data?.result) ? data.result : (Array.isArray(data) ? data : []);
 
-  // ---- NORMALIZE to our Review shape ----
+  // ---- Normalize to our Review shape ----
   const rows: Review[] = arr.map((x: any): Review => {
-    // IDs
-    const id = x.id ?? x.reviewId ?? x._id ?? x.uuid ?? cryptoRandomId();
+    const id = x.id ?? x.reviewId ?? x._id ?? x.uuid ?? Math.random().toString(36).slice(2);
 
-    // People / property
     const listingName =
       x.listingName ?? x.propertyName ?? x.listing?.name ?? x.property?.name ?? "Unknown Property";
     const guestName =
       x.guestName ?? x.reviewerName ?? x.guest?.name ?? x.authorName ?? "Guest";
 
-    // Text and status
     const publicReview = x.publicReview ?? x.review ?? x.comment ?? x.text ?? "";
     const status = x.status ?? "published";
 
-    // Channel & type
     const channel =
       x.channel ?? x.source ?? x.platform ?? (x.channelId ? `channel:${x.channelId}` : undefined);
     const type = x.type ?? x.direction ?? undefined;
 
-    // Overall rating (nullable)
     const rating =
       x.rating ?? x.overallRating ?? (Number.isFinite(x.score) ? Number(x.score) : null) ?? null;
 
-    // Categories (array or object)
     let reviewCategory: CategoryRating[] = [];
     if (Array.isArray(x.reviewCategory)) {
       reviewCategory = x.reviewCategory.map((c: any) => ({
@@ -167,14 +158,12 @@ async function fetchLiveReviews(): Promise<Review[]> {
       }));
     }
 
-    // Dates
     const iso =
       x.submittedAtIso ?? x.createdAt ?? x.date ?? x.created ?? x.updatedAt ?? null;
     const submittedAt =
       x.submittedAt ??
       (iso ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") : "1970-01-01 00:00:00");
 
-    // Approved flag (if any upstream hint)
     const approved =
       x.approved ??
       x.isApproved ??
@@ -198,12 +187,6 @@ async function fetchLiveReviews(): Promise<Review[]> {
   });
 
   return rows;
-}
-
-// Fallback ID if upstream lacks it
-function cryptoRandomId() {
-  // Not crypto-secure in all environments, but sufficient as a fallback ID for demo
-  return Math.random().toString(36).slice(2);
 }
 
 // ---------- Main handler ----------
@@ -251,12 +234,10 @@ export async function GET(req: NextRequest) {
     source = "live-error-fallback";
   }
 
-  // listing filter (exact, case-insensitive)
   if (listing) {
     rows = rows.filter((r) => icaseEq(r.listingName, listing));
   }
 
-  // free text filter
   if (q) {
     const needle = q.toLowerCase();
     rows = rows.filter((r) => {
@@ -265,32 +246,27 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // type filter
   if (types && types.length > 0) {
     rows = rows.filter((r) => (r.type ? types.includes(r.type.toLowerCase()) : false));
   }
 
-  // channel filter
   if (channels && channels.length > 0) {
     rows = rows.filter((r) => (r.channel ? channels.includes(r.channel.toLowerCase()) : false));
   }
 
-  // category + min filter
   if (category) {
     rows = rows.filter((r) => {
       const hit = r.reviewCategory?.find((c) => c.category === category);
       if (!hit) return false;
-      if (min === null) return hit.rating !== null; // if no min, just require a value
+      if (min === null) return hit.rating !== null;
       return typeof hit.rating === "number" && hit.rating >= min;
     });
   }
 
-  // approvedOnly
   if (approvedOnly) {
     rows = rows.filter((r) => r.approved === true);
   }
 
-  // date range (inclusive)
   rows = rows.filter((r) => {
     const t = toEpochMs(r);
     if (fromMs !== null && !Number.isNaN(fromMs) && t < fromMs) return false;
@@ -298,7 +274,6 @@ export async function GET(req: NextRequest) {
     return true;
   });
 
-  // sorting
   if (sort === "date") {
     rows.sort((a, b) => toEpochMs(a) - toEpochMs(b));
   } else if (sort === "rating") {
