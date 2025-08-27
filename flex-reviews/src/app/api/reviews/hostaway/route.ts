@@ -1,4 +1,8 @@
 // src/app/api/reviews/hostaway/route.ts
+
+export const runtime = 'nodejs';          // ✅ ensure Node serverless, not Edge
+export const dynamic = 'force-dynamic';   // ✅ don’t pre-render / statically analyze
+
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -64,7 +68,7 @@ function parseCsvLower(s: string | null): string[] | null {
 function icaseEq(a: string, b: string) {
   return a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
 }
-async function safeText(res: Response) {
+async function safeText(res: any) {
   try { return await res.text(); } catch { return "<no body>"; }
 }
 
