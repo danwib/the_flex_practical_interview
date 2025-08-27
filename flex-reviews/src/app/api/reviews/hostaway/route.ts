@@ -1,53 +1,233 @@
+// src/app/api/reviews/hostaway/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import raw from '@/../data/mock-reviews.json';
 import type { Review, ReviewsResponse } from '@/types/reviews';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-function loadReviews(): Review[] {
-  // If you’re using zod, you could parse/validate here.
-  const parsed = raw as unknown as ReviewsResponse;
-  return parsed.result as Review[];
+// ---------- helpers ----------
+const toIsoLike = (s: string) => s.replace(' ', 'T'); // "YYYY-MM-DD HH:mm:ss" → "YYYY-MM-DDTHH:mm:ss"
+const safeDate = (s?: string | null) => (s ? new Date(s) : undefined);
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+const trim = (s: string) => s.trim().replace(/\s+/g, ' ');
+
+// Allow list (optional – we still accept unknowns)
+const ALLOWED_CATEGORIES = new Set([
+  'cleanliness', 'communication', 'respect_house_rules', 'check_in', 'accuracy', 'location', 'value',
+]);
+
+// ---------- Zod schemas (lenient, with defaults) ----------
+const CatZ = z.object({
+  category: z.string().min(1),
+  rating: z.number().int().min(0).max(10).nullable().optional(),
+});
+
+const ReviewZ = z.object({
+  id: z.number().int(),
+  type: z.string().default('guest-to-host'),
+  status: z.string().default('published'),
+  rating: z.number().int().min(0).max(10).nullable().optional(),
+  publicReview: z.string().default(''),
+  reviewCategory: z.array(CatZ).default([]),
+  submittedAt: z.string().min(10), // will be parsed later
+  guestName: z.string().default('Guest'),
+  listingName: z.string().default('Unknown listing'),
+});
+
+type ZReview = z.infer<typeof ReviewZ>;
+
+// Validate an unknown array into typed reviews; drop invalid records
+function validate(rawArr: unknown): ZReview[] {
+  const arr = Array.isArray(rawArr) ? rawArr : [];
+  const ok: ZReview[] = [];
+  for (const r of arr) {
+    const parsed = ReviewZ.safeParse(r);
+    if (parsed.success) ok.push(parsed.data);
+  }
+  return ok;
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+// Normalise values for resilience (trim strings, clamp ratings, safe ISO dates)
+function normalize(r: ZReview): Review {
+  const normCats = (r.reviewCategory ?? []).map((c) => ({
+    category: trim(c.category),
+    rating: c.rating == null ? null : clamp(c.rating, 0, 10),
+  }));
 
-  const listing = searchParams.get('listing');           // exact listingName
-  const q = searchParams.get('q');                      // text search
-  const cat = searchParams.get('category');             // category name
-  const minStr = searchParams.get('min');               // min category rating
-  const from = searchParams.get('from');                // YYYY-MM-DD
-  const to = searchParams.get('to');                    // YYYY-MM-DD
+  const parsed = new Date(toIsoLike(r.submittedAt));
+  const iso =
+    Number.isNaN(parsed.getTime())
+      ? new Date(0).toISOString() // sentinel date
+      : parsed.toISOString();
 
-  const min = minStr !== null ? Number(minStr) : null;
+  return {
+    id: r.id,
+    type: r.type || 'guest-to-host',
+    status: r.status || 'published',
+    rating: r.rating == null ? null : clamp(r.rating, 0, 10),
+    publicReview: r.publicReview || '',
+    reviewCategory: normCats,
+    submittedAt: iso, // store ISO for consistent comparisons
+    guestName: trim(r.guestName || 'Guest'),
+    listingName: trim(r.listingName || 'Unknown listing'),
+  };
+}
 
-  const all: Review[] = loadReviews();
-  let rows: Review[] = all.slice();
-
-  if (listing) rows = rows.filter(r => r.listingName === listing);
-
-  if (q) {
-    const s = q.toLowerCase();
-    rows = rows.filter(r =>
-      r.publicReview?.toLowerCase().includes(s) ||
-      r.guestName?.toLowerCase().includes(s) ||
-      r.listingName?.toLowerCase().includes(s)
-    );
-  }
-
-  if (cat) {
-    rows = rows.filter(r => r.reviewCategory?.some(c => c.category === cat));
-    if (min !== null && !Number.isNaN(min)) {
-      rows = rows.filter(r =>
-        r.reviewCategory?.some(c => c.category === cat && (c.rating ?? -Infinity) >= min)
-      );
+// Remove duplicate IDs (keep first occurrence)
+function dedupeById(rows: Review[]): Review[] {
+  const seen = new Set<number>();
+  const out: Review[] = [];
+  for (const r of rows) {
+    if (!seen.has(r.id)) {
+      seen.add(r.id);
+      out.push(r);
     }
   }
+  return out;
+}
 
-  // Simple string compare is OK because submittedAt is ISO-ish; if unsure, normalise.
-  if (from) rows = rows.filter(r => r.submittedAt >= `${from} 00:00:00`);
-  if (to)   rows = rows.filter(r => r.submittedAt <= `${to} 23:59:59`);
+// Optional live fetch (defaults to mock)
+const HOSTAWAY_ACCOUNT_ID = process.env.HOSTAWAY_ACCOUNT_ID;
+const HOSTAWAY_API_KEY = process.env.HOSTAWAY_API_KEY;
 
-  return NextResponse.json({ status: 'success', result: rows } as ReviewsResponse);
+async function fetchReviews(): Promise<Review[]> {
+  // Live path (optional)
+  if (HOSTAWAY_ACCOUNT_ID && HOSTAWAY_API_KEY) {
+    const url = `https://api.hostaway.com/v1/reviews?accountId=${encodeURIComponent(
+      HOSTAWAY_ACCOUNT_ID,
+    )}`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${HOSTAWAY_API_KEY}` },
+      // revalidate disabled: we read on-demand
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      // In production you might log this
+      throw new Error(`Hostaway API error: ${res.status}`);
+    }
+    const json = (await res.json()) as ReviewsResponse;
+    return dedupeById(validate(json?.result).map(normalize));
+  }
+
+  // Mock path (default)
+  const parsed = raw as unknown as ReviewsResponse;
+  return dedupeById(validate(parsed?.result).map(normalize));
+}
+
+// ---------- API ----------
+type ReviewsApiSuccess = {
+  status: 'success';
+  result: Review[];
+  total: number;
+  page: number;
+  limit: number;
+};
+type ReviewsApiError = { status: 'error'; message: string };
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+
+    // Query params
+    const listing = searchParams.get('listing'); // exact match on listingName
+    const q = searchParams.get('q'); // text search in publicReview/guestName/listing
+    const cat = searchParams.get('category'); // category name
+    const minStr = searchParams.get('min'); // min category rating
+    const from = searchParams.get('from'); // YYYY-MM-DD
+    const to = searchParams.get('to'); // YYYY-MM-DD
+    const sortBy = searchParams.get('sortBy') || '-submittedAt'; // 'submittedAt' | '-submittedAt' | 'rating' | '-rating'
+    const page = Math.max(1, Number(searchParams.get('page') || 1));
+    const limit = clamp(Number(searchParams.get('limit') || 25), 1, 100);
+
+    const min = minStr !== null ? Number(minStr) : null;
+
+    // Load + normalise
+    const all = await fetchReviews();
+
+    // Default: published only (change if you need drafts)
+    let rows = all.filter((r) => (r.status ?? 'published') === 'published');
+
+    // Filters
+    if (listing) rows = rows.filter((r) => r.listingName === listing);
+
+    if (q) {
+      const s = q.toLowerCase();
+      rows = rows.filter(
+        (r) =>
+          r.publicReview.toLowerCase().includes(s) ||
+          r.guestName.toLowerCase().includes(s) ||
+          r.listingName.toLowerCase().includes(s),
+      );
+    }
+
+    if (cat) {
+      // accept unknown categories too; if you want to enforce allowed set, also check ALLOWED_CATEGORIES.has(cat)
+      rows = rows.filter((r) => r.reviewCategory?.some((c) => c.category === cat));
+      if (min !== null && !Number.isNaN(min)) {
+        rows = rows.filter((r) =>
+          r.reviewCategory?.some(
+            (c) => c.category === cat && (c.rating ?? -Infinity) >= min,
+          ),
+        );
+      }
+    }
+
+    // Hardened date filtering (ISO stored in submittedAt)
+    if (from) {
+      const f = safeDate(`${from}T00:00:00`);
+      if (f && !Number.isNaN(f.getTime())) {
+        rows = rows.filter((r) => {
+          const d = new Date(r.submittedAt);
+          return !Number.isNaN(d.getTime()) && d >= f;
+        });
+      }
+    }
+    if (to) {
+      const t = safeDate(`${to}T23:59:59`);
+      if (t && !Number.isNaN(t.getTime())) {
+        rows = rows.filter((r) => {
+          const d = new Date(r.submittedAt);
+          return !Number.isNaN(d.getTime()) && d <= t;
+        });
+      }
+    }
+
+    // Sorting
+    const key = sortBy.startsWith('-') ? sortBy.slice(1) : sortBy;
+    const dir = sortBy.startsWith('-') ? -1 : 1;
+    rows.sort((a, b) => {
+      const av =
+        key === 'submittedAt'
+          ? new Date(a.submittedAt).getTime()
+          : (a.rating ?? -1);
+      const bv =
+        key === 'submittedAt'
+          ? new Date(b.submittedAt).getTime()
+          : (b.rating ?? -1);
+      return (av - bv) * dir;
+    });
+
+    // Pagination
+    const total = rows.length;
+    const start = (page - 1) * limit;
+    rows = rows.slice(start, start + limit);
+
+    const payload: ReviewsApiSuccess = {
+      status: 'success',
+      result: rows,
+      total,
+      page,
+      limit,
+    };
+    return NextResponse.json(payload, { status: 200 });
+  } catch (err) {
+    const payload: ReviewsApiError = {
+      status: 'error',
+      message: err instanceof Error ? err.message : 'Unknown error',
+    };
+    return NextResponse.json(payload, { status: 500 });
+  }
 }
