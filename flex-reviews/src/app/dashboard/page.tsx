@@ -13,6 +13,7 @@ type Review = {
   channel?: string;                       // NEW optional fields
   type?: string;                          // "
   rating?: number | null;                 // "
+  approved?: boolean;                     // optional server-approved flag
 };
 
 function useApprovals() {
@@ -41,7 +42,7 @@ export default function DashboardPage() {
   const [sortKey, setSortKey] = useState<'date' | 'rating'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const { map, toggle } = useApprovals();
+  const { map, set: setApproval } = useApprovals();
 
   useEffect(() => {
     const url = new URL('/api/reviews/hostaway', window.location.origin);
@@ -56,7 +57,9 @@ export default function DashboardPage() {
     if (sortKey) url.searchParams.set('sort', sortKey);
     if (sortOrder) url.searchParams.set('order', sortOrder);
 
-    fetch(url).then(r => r.json()).then(d => setReviews(d.result));
+    fetch(url)
+      .then(r => r.json())
+      .then(d => setReviews(Array.isArray(d?.result) ? d.result : []));
   }, [q, listing, category, min, channel, type, sortKey, sortOrder]);
 
   const listings = useMemo(
@@ -87,6 +90,9 @@ export default function DashboardPage() {
     return isNaN(d.getTime()) ? r.submittedAt : d.toLocaleDateString();
     // If you prefer full datetime: d.toLocaleString()
   };
+
+  // Union helper: server-approved OR locally-approved
+  const isApproved = (r: Review) => (r.approved === true) || !!map[r.id];
 
   return (
     <div className="p-6 space-y-4">
@@ -184,7 +190,13 @@ export default function DashboardPage() {
           {reviews.map(r => (
             <tr key={r.id} className="border-b align-top">
               <td className="py-2">
-                <input type="checkbox" checked={!!map[r.id]} onChange={() => toggle(r.id)} />
+                {/* Use union for checked; flipping sets local state to the opposite of the union */}
+                <input
+                  type="checkbox"
+                  checked={isApproved(r)}
+                  onChange={() => setApproval(r.id, !isApproved(r))}
+                  aria-label={`Approve review ${r.id}`}
+                />
               </td>
               <td>{r.listingName}</td>
               <td>{r.guestName}</td>
@@ -213,8 +225,9 @@ export default function DashboardPage() {
       </table>
 
       <p className="text-xs text-neutral-500">
-        Note: Approval states are stored locally in your browser for the demo. In production,
-        this would live in a DB (Vercel KV/Postgres) keyed by review ID.
+        Note: Approval states use a union of server-approved and your local selections for the demo.
+        In production, this would live in a DB (Vercel KV/Postgres) keyed by review ID, and the
+        public page would query <code>approvedOnly=true</code>.
       </p>
     </div>
   );
