@@ -2,19 +2,2404 @@
   "status": "success",
   "result": [
     {
-      "id": 7453,
+      "id": 7000,
       "type": "host-to-guest",
       "status": "published",
       "rating": null,
-      "publicReview": "Shane and family are wonderful! Would definitely host again :)",
+      "publicReview": "Fine for a short stay.",
       "reviewCategory": [
-        {"category": "cleanliness", "rating": 10},
-        {"category": "communication", "rating": 10},
-        {"category": "respect_house_rules", "rating": 10}
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
       ],
-      "submittedAt": "2020-08-21 22:45:14",
+      "submittedAt": "2024-04-16 10:33:15",
+      "guestName": "Amara Singh",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7001,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Comfortable and quiet, perfect for work.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2025-07-06 14:07:46",
+      "guestName": "Mia Garcia",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7002,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2024-06-13 18:18:07",
+      "guestName": "Mia Garcia",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7003,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 8
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2025-01-21 14:02:04",
+      "guestName": "Amara Singh",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7004,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 10
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": null
+        }
+      ],
+      "submittedAt": "2025-04-17 18:33:36",
+      "guestName": "Isla Murphy",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7005,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Spotlessly clean and great communication.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 10
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2024-08-02 13:27:45",
+      "guestName": "Mateo Rossi",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7006,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": null
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2024-09-22 08:32:36",
       "guestName": "Shane Finkelstein",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7007,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": null,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": null
+        },
+        {
+          "category": "communication",
+          "rating": 8
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": null
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2025-01-28 18:35:21",
+      "guestName": "Noah Wilson",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7008,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2025-01-10 18:31:45",
+      "guestName": "Emma Johnson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7009,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 10
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": null
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2024-10-04 15:34:55",
+      "guestName": "Emma Johnson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7010,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2024-12-22 11:29:35",
+      "guestName": "Amara Singh",
       "listingName": "2B N1 A - 29 Shoreditch Heights"
+    },
+    {
+      "id": 7011,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": null
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2024-10-11 18:17:13",
+      "guestName": "Amara Singh",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7012,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": null
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2025-04-08 20:41:03",
+      "guestName": "Mia Garcia",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7013,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": null
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2024-05-17 12:55:57",
+      "guestName": "Lucas Nguyen",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7014,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": null
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2024-11-08 11:02:02",
+      "guestName": "Ava Thompson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7015,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 10
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2024-10-24 12:23:53",
+      "guestName": "Mateo Rossi",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7016,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-03-18 10:08:03",
+      "guestName": "Lucas Nguyen",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7017,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2025-03-09 21:47:17",
+      "guestName": "Lucas Nguyen",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7018,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": null
+        },
+        {
+          "category": "communication",
+          "rating": null
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2025-02-17 09:03:47",
+      "guestName": "Mateo Rossi",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7019,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": null
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2025-07-28 18:53:46",
+      "guestName": "Leo Dupont",
+      "listingName": "2B N1 A - 29 Shoreditch Heights"
+    },
+    {
+      "id": 7020,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2025-02-22 20:46:45",
+      "guestName": "Oliver Brown",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7021,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-06-07 17:59:09",
+      "guestName": "Sofia Chen",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7022,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 8
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2024-05-07 21:13:07",
+      "guestName": "Leo Dupont",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7023,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Excellent location and easy check-in.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2024-12-08 20:03:46",
+      "guestName": "Sofia Chen",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7024,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Excellent location and easy check-in.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 10
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2024-06-08 10:59:09",
+      "guestName": "Amara Singh",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7025,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2024-12-10 16:25:53",
+      "guestName": "Ava Thompson",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7026,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": null
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2024-04-17 20:27:50",
+      "guestName": "Ava Thompson",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7027,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-05-16 21:43:57",
+      "guestName": "Isla Murphy",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7028,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Excellent location and easy check-in.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": null
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-01-03 10:04:22",
+      "guestName": "Emma Johnson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7029,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Spotlessly clean and great communication.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2025-03-07 21:08:43",
+      "guestName": "Oliver Brown",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7030,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": null
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2024-04-05 11:45:50",
+      "guestName": "Leo Dupont",
+      "listingName": "2B N1 A - 29 Shoreditch Heights"
+    },
+    {
+      "id": 7031,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": null
+        }
+      ],
+      "submittedAt": "2025-01-23 13:17:17",
+      "guestName": "Mia Garcia",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7032,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 8
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2025-03-04 22:14:29",
+      "guestName": "Amara Singh",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7033,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": null
+        },
+        {
+          "category": "communication",
+          "rating": null
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-06-26 15:38:06",
+      "guestName": "Isla Murphy",
+      "listingName": "2B N1 A - 29 Shoreditch Heights"
+    },
+    {
+      "id": 7034,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": null
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-05-15 18:06:29",
+      "guestName": "Mia Garcia",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7035,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 10
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-05-04 20:42:01",
+      "guestName": "Amara Singh",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7036,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 10
+        },
+        {
+          "category": "check_in",
+          "rating": 6
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2024-10-25 13:23:27",
+      "guestName": "Mia Garcia",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7037,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2024-07-01 22:52:52",
+      "guestName": "Leo Dupont",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7038,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 8
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2025-05-18 16:25:37",
+      "guestName": "Emma Johnson",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7039,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Wonderful stay, would definitely return.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": null
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 10
+        },
+        {
+          "category": "check_in",
+          "rating": null
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2025-01-26 08:15:03",
+      "guestName": "Ava Thompson",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7040,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2024-12-03 19:08:59",
+      "guestName": "Lucas Nguyen",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7041,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2025-04-15 15:45:58",
+      "guestName": "Sofia Chen",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7042,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": null
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 10
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2024-03-11 12:28:09",
+      "guestName": "Leo Dupont",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7043,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": null
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2025-06-28 19:11:00",
+      "guestName": "Amara Singh",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7044,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2025-06-17 20:57:06",
+      "guestName": "Ava Thompson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7045,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Wonderful stay, would definitely return.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": null
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": null
+        }
+      ],
+      "submittedAt": "2025-05-13 15:33:29",
+      "guestName": "Leo Dupont",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7046,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-02-13 16:29:21",
+      "guestName": "Sofia Chen",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7047,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": null
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2024-07-18 19:25:27",
+      "guestName": "Leo Dupont",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7048,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Wonderful stay, would definitely return.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 10
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": null
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2025-04-10 13:30:06",
+      "guestName": "Sofia Chen",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7049,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 9,
+      "publicReview": "Spotlessly clean and great communication.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 10
+        },
+        {
+          "category": "communication",
+          "rating": null
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 8
+        }
+      ],
+      "submittedAt": "2025-08-21 11:59:43",
+      "guestName": "Lucas Nguyen",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7050,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": null,
+      "publicReview": "Fine for a short stay.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": null
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2024-12-06 22:25:13",
+      "guestName": "Noah Wilson",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7051,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 8
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 7
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2025-05-14 22:32:16",
+      "guestName": "Mia Garcia",
+      "listingName": "1BR Deluxe - Waterloo Arch 191"
+    },
+    {
+      "id": 7052,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2024-12-03 08:23:07",
+      "guestName": "Mia Garcia",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7053,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 7
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 6
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 9
+        }
+      ],
+      "submittedAt": "2025-06-04 19:14:49",
+      "guestName": "Emma Johnson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7054,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 6
+        }
+      ],
+      "submittedAt": "2024-05-17 13:22:01",
+      "guestName": "Mateo Rossi",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7055,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 8
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 10
+        }
+      ],
+      "submittedAt": "2025-03-03 22:21:57",
+      "guestName": "Emma Johnson",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7056,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": null
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 10
+        },
+        {
+          "category": "check_in",
+          "rating": 8
+        },
+        {
+          "category": "accuracy",
+          "rating": 10
+        },
+        {
+          "category": "location",
+          "rating": 6
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-02-04 19:33:47",
+      "guestName": "Lucas Nguyen",
+      "listingName": "Penthouse - Southbank Riverside"
+    },
+    {
+      "id": 7057,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "As expected for the price.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 9
+        },
+        {
+          "category": "communication",
+          "rating": 7
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 8
+        },
+        {
+          "category": "check_in",
+          "rating": 10
+        },
+        {
+          "category": "accuracy",
+          "rating": 9
+        },
+        {
+          "category": "location",
+          "rating": 7
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2024-08-27 15:09:42",
+      "guestName": "Oliver Brown",
+      "listingName": "2BR - King’s Cross St Pancras"
+    },
+    {
+      "id": 7058,
+      "type": "host-to-guest",
+      "status": "published",
+      "rating": 8,
+      "publicReview": "Decent place, could improve instructions.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 6
+        },
+        {
+          "category": "communication",
+          "rating": 9
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 9
+        },
+        {
+          "category": "check_in",
+          "rating": 7
+        },
+        {
+          "category": "accuracy",
+          "rating": null
+        },
+        {
+          "category": "location",
+          "rating": 8
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-03-02 18:39:11",
+      "guestName": "Mateo Rossi",
+      "listingName": "Studio - Canary Wharf Dockside"
+    },
+    {
+      "id": 7059,
+      "type": "guest-to-host",
+      "status": "published",
+      "rating": 7,
+      "publicReview": "Overall good, a couple of minor issues.",
+      "reviewCategory": [
+        {
+          "category": "cleanliness",
+          "rating": 7
+        },
+        {
+          "category": "communication",
+          "rating": 6
+        },
+        {
+          "category": "respect_house_rules",
+          "rating": 6
+        },
+        {
+          "category": "check_in",
+          "rating": 9
+        },
+        {
+          "category": "accuracy",
+          "rating": 8
+        },
+        {
+          "category": "location",
+          "rating": 9
+        },
+        {
+          "category": "value",
+          "rating": 7
+        }
+      ],
+      "submittedAt": "2025-02-09 16:21:08",
+      "guestName": "Leo Dupont",
+      "listingName": "Studio - Canary Wharf Dockside"
     }
   ]
 }
