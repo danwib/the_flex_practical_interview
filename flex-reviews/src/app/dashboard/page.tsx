@@ -10,9 +10,9 @@ type Review = {
   submittedAt: string;
   submittedAtIso?: string;                // optional, if present in data
   reviewCategory: { category: string; rating: number | null }[];
-  channel?: string;                       // NEW optional fields
-  type?: string;                          // "
-  rating?: number | null;                 // "
+  channel?: string;                       // optional
+  type?: string;                          // optional
+  rating?: number | null;                 // optional
   approved?: boolean;                     // optional server-approved flag
 };
 
@@ -44,14 +44,13 @@ export default function DashboardPage() {
 
   const { map, set: setApproval } = useApprovals();
 
+  // Fetch data based on filters
   useEffect(() => {
     const url = new URL('/api/reviews/hostaway', window.location.origin);
     if (q) url.searchParams.set('q', q);
     if (listing) url.searchParams.set('listing', listing);
     if (category) url.searchParams.set('category', category);
     if (min !== '') url.searchParams.set('min', String(min));
-
-    // NEW params
     if (channel) url.searchParams.set('channel', channel);
     if (type) url.searchParams.set('type', type);
     if (sortKey) url.searchParams.set('sort', sortKey);
@@ -62,6 +61,7 @@ export default function DashboardPage() {
       .then(d => setReviews(Array.isArray(d?.result) ? d.result : []));
   }, [q, listing, category, min, channel, type, sortKey, sortOrder]);
 
+  // Options (derived from results)
   const listings = useMemo(
     () => Array.from(new Set(reviews.map(r => r.listingName))).sort(),
     [reviews]
@@ -83,148 +83,207 @@ export default function DashboardPage() {
     [reviews]
   );
 
+  // Helpers
   const formatDate = (r: Review) => {
     // prefer ISO if present, else convert "YYYY-MM-DD HH:mm:ss" to ISO (append Z to avoid TZ ambiguity)
     const iso = r.submittedAtIso ?? (r.submittedAt.replace(' ', 'T') + 'Z');
     const d = new Date(iso);
     return isNaN(d.getTime()) ? r.submittedAt : d.toLocaleDateString();
-    // If you prefer full datetime: d.toLocaleString()
   };
 
-  // Union helper: server-approved OR locally-approved
   const isApproved = (r: Review) => (r.approved === true) || !!map[r.id];
+
+  // Quick stats for header chips
+  const total = reviews.length;
+  const approvedCount = reviews.reduce((acc, r) => acc + (isApproved(r) ? 1 : 0), 0);
+  const avgRating = useMemo(() => {
+    const vals = reviews.map(r => r.rating).filter((n): n is number => n != null);
+    if (!vals.length) return null;
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return Math.round(mean * 10) / 10;
+  }, [reviews]);
+
+  // Input styling (uses brand tokens)
+  const inputCls =
+    'w-full bg-surface border border-line rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand/30';
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Manager Reviews Dashboard</h1>
-
-      <div className="grid gap-2 sm:grid-cols-4">
-        <input
-          className="border rounded p-2"
-          placeholder="Search text/guest/listing"
-          value={q}
-          onChange={e => setQ(e.target.value)}
-        />
-
-        <select
-          className="border rounded p-2"
-          value={listing}
-          onChange={e => setListing(e.target.value)}
-        >
-          <option value="">All listings</option>
-          {listings.map(l => <option key={l} value={l}>{l}</option>)}
-        </select>
-
-        <select
-          className="border rounded p-2"
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-        >
-          <option value="">Any category</option>
-          {cats.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-
-        <input
-          className="border rounded p-2"
-          type="number" min={0} max={10}
-          placeholder="Min cat rating"
-          value={min}
-          onChange={e => setMin(e.target.value === '' ? '' : Number(e.target.value))}
-        />
+      {/* Title */}
+      <div className="flex items-end justify-between">
+        <h1 className="text-2xl font-semibold text-ink">Manager Reviews Dashboard</h1>
+        {/* Quick counters */}
+        <div className="hidden sm:flex gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
+            Total: <b className="text-ink">{total}</b>
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
+            Approved: <b className="text-ink">{approvedCount}</b>
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-subtle">
+            Avg rating: <b className="text-ink">{avgRating ?? '–'}</b>
+          </span>
+        </div>
       </div>
 
-      {/* NEW: second row of controls */}
-      <div className="grid gap-2 sm:grid-cols-4">
-        <select
-          className="border rounded p-2"
-          value={channel}
-          onChange={e => setChannel(e.target.value)}
-        >
-          <option value="">All channels</option>
-          {channelOptions.map(ch => <option key={ch} value={ch}>{ch}</option>)}
-        </select>
+      {/* Sticky filter toolbar */}
+      <div className="sticky top-0 z-10 -mx-6 border-b border-line bg-surface/90 px-6 py-3 backdrop-blur">
+        <div className="grid gap-2 sm:grid-cols-4">
+          <input
+            className={inputCls}
+            placeholder="Search text / guest / listing"
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            aria-label="Search"
+          />
 
-        <select
-          className="border rounded p-2"
-          value={type}
-          onChange={e => setType(e.target.value)}
-        >
-          <option value="">All types</option>
-          {typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
+          <select
+            className={inputCls}
+            value={listing}
+            onChange={e => setListing(e.target.value)}
+            aria-label="Listing"
+          >
+            <option value="">All listings</option>
+            {listings.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
 
-        <select
-          className="border rounded p-2"
-          value={sortKey}
-          onChange={e => setSortKey(e.target.value as 'date' | 'rating')}
-        >
-          <option value="date">Sort by date</option>
-          <option value="rating">Sort by overall rating</option>
-        </select>
+          <select
+            className={inputCls}
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            aria-label="Category"
+          >
+            <option value="">Any category</option>
+            {cats.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
 
-        <select
-          className="border rounded p-2"
-          value={sortOrder}
-          onChange={e => setSortOrder(e.target.value as 'asc' | 'desc')}
-        >
-          <option value="desc">Order: Desc</option>
-          <option value="asc">Order: Asc</option>
-        </select>
+          <input
+            className={inputCls}
+            type="number" min={0} max={10}
+            placeholder="Min cat rating"
+            value={min}
+            onChange={e => setMin(e.target.value === '' ? '' : Number(e.target.value))}
+            aria-label="Minimum category rating"
+          />
+        </div>
+
+        {/* second row */}
+        <div className="mt-2 grid gap-2 sm:grid-cols-4">
+          <select
+            className={inputCls}
+            value={channel}
+            onChange={e => setChannel(e.target.value)}
+            aria-label="Channel"
+          >
+            <option value="">All channels</option>
+            {channelOptions.map(ch => <option key={ch} value={ch}>{ch}</option>)}
+          </select>
+
+          <select
+            className={inputCls}
+            value={type}
+            onChange={e => setType(e.target.value)}
+            aria-label="Type"
+          >
+            <option value="">All types</option>
+            {typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+
+          <select
+            className={inputCls}
+            value={sortKey}
+            onChange={e => setSortKey(e.target.value as 'date' | 'rating')}
+            aria-label="Sort key"
+          >
+            <option value="date">Sort by date</option>
+            <option value="rating">Sort by overall rating</option>
+          </select>
+
+          <div className="flex gap-2">
+            <select
+              className={inputCls}
+              value={sortOrder}
+              onChange={e => setSortOrder(e.target.value as 'asc' | 'desc')}
+              aria-label="Sort order"
+            >
+              <option value="desc">Order: Desc</option>
+              <option value="asc">Order: Asc</option>
+            </select>
+            <button
+              className="whitespace-nowrap rounded-xl border border-line bg-surface px-3 text-sm text-subtle hover:text-ink"
+              onClick={() => { setQ(''); setListing(''); setCategory(''); setMin(''); setChannel(''); setType(''); setSortKey('date'); setSortOrder('desc'); }}
+              aria-label="Clear filters"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
       </div>
 
-      <table className="w-full text-sm">
-        <thead className="text-left border-b">
-          <tr>
-            <th className="py-2">Approve</th>
-            <th>Listing</th>
-            <th>Guest</th>
-            <th>Submitted</th>
-            <th>Text</th>
-            <th>Categories</th>
-            <th>Channel</th>   {/* NEW column (non-breaking if missing) */}
-            <th>Type</th>      {/* NEW column */}
-            <th>Overall</th>   {/* NEW column */}
-          </tr>
-        </thead>
-        <tbody>
-          {reviews.map(r => (
-            <tr key={r.id} className="border-b align-top">
-              <td className="py-2">
-                {/* Use union for checked; flipping sets local state to the opposite of the union */}
-                <input
-                  type="checkbox"
-                  checked={isApproved(r)}
-                  onChange={() => setApproval(r.id, !isApproved(r))}
-                  aria-label={`Approve review ${r.id}`}
-                />
-              </td>
-              <td>{r.listingName}</td>
-              <td>{r.guestName}</td>
-              <td>{formatDate(r)}</td>
-              <td className="max-w-[30ch]">{r.publicReview}</td>
-              <td>
-                {r.reviewCategory?.map(c => (
-                  <span key={c.category} className="inline-block mr-2">
-                    {c.category}: <b>{c.rating ?? '-'}</b>
-                  </span>
-                ))}
-              </td>
-              <td>{r.channel ?? '-'}</td>
-              <td>{r.type ?? '-'}</td>
-              <td>{r.rating ?? '-'}</td>
+      {/* Table */}
+      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+        <table className="w-full text-sm">
+          <thead className="text-left border-b border-line bg-surface sticky top-[calc(3rem+1px)] z-0">
+            <tr className="text-xs uppercase tracking-wide text-subtle">
+              <th className="py-3 px-3">Approve</th>
+              <th className="px-3">Listing</th>
+              <th className="px-3">Guest</th>
+              <th className="px-3">Submitted</th>
+              <th className="px-3">Text</th>
+              <th className="px-3">Categories</th>
+              <th className="px-3">Channel</th>
+              <th className="px-3">Type</th>
+              <th className="px-3">Overall</th>
             </tr>
-          ))}
-          {reviews.length === 0 && (
-            <tr>
-              <td colSpan={9} className="py-8 text-center text-neutral-500">
-                No reviews match the filters.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {reviews.map(r => (
+              <tr
+                key={r.id}
+                className="border-b border-line align-top odd:bg-[rgba(0,0,0,0.015)] hover:bg-[rgba(0,0,0,0.03)]"
+              >
+                <td className="py-3 px-3">
+                  <input
+                    type="checkbox"
+                    className="accent-brand"
+                    checked={isApproved(r)}
+                    onChange={() => setApproval(r.id, !isApproved(r))}
+                    aria-label={`Approve review ${r.id}`}
+                  />
+                </td>
+                <td className="px-3 text-ink">{r.listingName}</td>
+                <td className="px-3">{r.guestName}</td>
+                <td className="px-3 text-subtle">{formatDate(r)}</td>
+                <td className="px-3 max-w-[52ch]">
+                  <span className="text-ink">{r.publicReview}</span>
+                </td>
+                <td className="px-3">
+                  {r.reviewCategory?.map(c => (
+                    <span
+                      key={c.category}
+                      className="mr-2 inline-flex items-center rounded-full border border-line px-2 py-0.5 text-xs text-subtle"
+                    >
+                      {c.category}: <b className="ml-1 text-ink">{c.rating ?? '-'}</b>
+                    </span>
+                  ))}
+                </td>
+                <td className="px-3 text-subtle">{r.channel ?? '-'}</td>
+                <td className="px-3 text-subtle">{r.type ?? '-'}</td>
+                <td className="px-3 text-ink">{r.rating ?? '-'}</td>
+              </tr>
+            ))}
+            {reviews.length === 0 && (
+              <tr>
+                <td colSpan={9} className="py-12 text-center text-subtle">
+                  No reviews match the filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-subtle">
         Note: Approval states use a union of server-approved and your local selections for the demo.
         In production, this would live in a DB (Vercel KV/Postgres) keyed by review ID, and the
         public page would query <code>approvedOnly=true</code>.
