@@ -49,6 +49,9 @@ const categories = [
   "cleanliness","communication","respect_house_rules","check_in","accuracy","location","value"
 ];
 
+// NEW: channels for filtering
+const channels = ["Airbnb", "Booking", "Direct"];
+
 // Recent 18 months
 function randomDate() {
   const now = new Date();
@@ -59,7 +62,8 @@ function randomDate() {
   d.setHours(randint(8, 22), randint(0, 59), randint(0, 59));
   // hostaway-ish "YYYY-MM-DD HH:mm:ss"
   const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const hostawayFmt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return { hostawayFmt, iso: d.toISOString(), ts: d.getTime() };
 }
 
 function reviewText(score) {
@@ -71,6 +75,7 @@ function reviewText(score) {
 function makeReview(id) {
   const listingName = pick(listings);
   const guestName = pick(guests);
+
   // Generate category ratings out of 10 (integers, with some nulls)
   const reviewCategory = categories.map(cat => {
     // 10% chance null to simulate missing
@@ -85,16 +90,22 @@ function makeReview(id) {
 
   const text = reviewText(avg ?? 7);
 
+  const when = randomDate();
+
   return {
     id,
     type: rnd() < 0.85 ? "guest-to-host" : "host-to-guest",
     status: "published",
+    channel: pick(channels),         // NEW: channel for API filtering
     rating,
     publicReview: text,
     reviewCategory,
-    submittedAt: randomDate(),
+    submittedAt: when.hostawayFmt,   // original Hostaway-style
+    submittedAtIso: when.iso,        // NEW: ISO for robust sorting/filtering (optional but helpful)
+    submittedAtTs: when.ts,          // NEW: numeric timestamp (optional)
     guestName,
-    listingName
+    listingName,
+    approved: rnd() < 0.65           // NEW: pre-seed some approved reviews (~65%)
   };
 }
 
