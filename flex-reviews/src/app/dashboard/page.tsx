@@ -8,12 +8,12 @@ type Review = {
   guestName: string;
   listingName: string;
   submittedAt: string;
-  submittedAtIso?: string;                // optional, if present in data
+  submittedAtIso?: string;
   reviewCategory: { category: string; rating: number | null }[];
-  channel?: string;                       // optional
-  type?: string;                          // optional
-  rating?: number | null;                 // optional
-  approved?: boolean;                     // optional server-approved flag
+  channel?: string;
+  type?: string;
+  rating?: number | null;
+  approved?: boolean;
 };
 
 function useApprovals() {
@@ -27,6 +27,29 @@ function useApprovals() {
   return { map, toggle, set };
 }
 
+// --- helpers for sorting merged results ---
+function epochMs(r: Review): number {
+  const iso = r.submittedAtIso ?? (r.submittedAt ? r.submittedAt.replace(' ', 'T') + 'Z' : '');
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
+function sortCombined(rows: Review[], key: 'date' | 'rating', order: 'asc' | 'desc'): Review[] {
+  const out = [...rows];
+  if (key === 'date') {
+    out.sort((a, b) => epochMs(a) - epochMs(b));
+  } else {
+    out.sort((a, b) => {
+      const A = a.rating, B = b.rating;
+      if (A == null && B == null) return 0;
+      if (A == null) return 1;
+      if (B == null) return -1;
+      return A - B;
+    });
+  }
+  if (order === 'desc') out.reverse();
+  return out;
+}
+
 export default function DashboardPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
 
@@ -37,8 +60,8 @@ export default function DashboardPage() {
   const [min, setMin] = useState<number | ''>('');
 
   // NEW filters
-  const [channel, setChannel] = useState('');         // single value → API supports CSV but single is fine
-  const [type, setType] = useState('');               // "
+  const [channel, setChannel] = useState('');
+  const [type, setType] = useState('');
   const [sortKey, setSortKey] = useState<'date' | 'rating'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -46,19 +69,56 @@ export default function DashboardPage() {
 
   // Fetch data based on filters
   useEffect(() => {
-    const url = new URL('/api/reviews/hostaway', window.location.origin);
-    if (q) url.searchParams.set('q', q);
-    if (listing) url.searchParams.set('listing', listing);
-    if (category) url.searchParams.set('category', category);
-    if (min !== '') url.searchParams.set('min', String(min));
-    if (channel) url.searchParams.set('channel', channel);
-    if (type) url.searchParams.set('type', type);
-    if (sortKey) url.searchParams.set('sort', sortKey);
-    if (sortOrder) url.searchParams.set('order', sortOrder);
+    let cancelled = false;
+    const origin = window.location.origin;
 
-    fetch(url)
-      .then(r => r.json())
-      .then(d => setReviews(Array.isArray(d?.result) ? d.result : []));
+    async function load() {
+      // 1) Hostaway (or mock) via our API
+      const url = new URL('/api/reviews/hostaway', origin);
+      if (q) url.searchParams.set('q', q);
+      if (listing) url.searchParams.set('listing', listing);
+      if (category) url.searchParams.set('category', category);
+      if (min !== '') url.searchParams.set('min', String(min));
+      if (channel) url.searchParams.set('channel', channel);
+      if (type) url.searchParams.set('type', type);
+      if (sortKey) url.searchParams.set('sort', sortKey);
+      if (sortOrder) url.searchParams.set('order', sortOrder);
+
+      const baseResp = await fetch(url);
+      const baseJson = await baseResp.json();
+      const base: Review[] = Array.isArray(baseJson?.result) ? baseJson.result : [];
+
+      if (cancelled) return;
+
+      // 2) Optionally fetch Google for the selected listing
+      const shouldFetchGoogle =
+        !!listing && (channel === '' || channel.toLowerCase() === 'google');
+
+      if (!shouldFetchGoogle) {
+        setReviews(base); // Already server-sorted
+        return;
+      }
+
+      try {
+        const gUrl = new URL('/api/reviews/google', origin);
+        gUrl.searchParams.set('listing', listing);
+        const gResp = await fetch(gUrl);
+        const gJson = await gResp.json();
+        const gRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
+
+        if (cancelled) return;
+
+        // 3) Merge + client-sort to match current sort key/order
+        const merged = sortCombined([...base, ...gRows], sortKey, sortOrder);
+        setReviews(merged);
+      } catch {
+        // fail-soft: just show base
+        if (!cancelled) setReviews(base);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [q, listing, category, min, channel, type, sortKey, sortOrder]);
 
   // Options (derived from results)
@@ -85,7 +145,6 @@ export default function DashboardPage() {
 
   // Helpers
   const formatDate = (r: Review) => {
-    // prefer ISO if present, else convert "YYYY-MM-DD HH:mm:ss" to ISO (append Z to avoid TZ ambiguity)
     const iso = r.submittedAtIso ?? (r.submittedAt.replace(' ', 'T') + 'Z');
     const d = new Date(iso);
     return isNaN(d.getTime()) ? r.submittedAt : d.toLocaleDateString();
@@ -107,7 +166,7 @@ export default function DashboardPage() {
   const inputCls =
     'w-full bg-surface border border-line rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand/30';
 
-  // --- Public view quick-nav ---
+  // Public view quick-nav
   const [publicListing, setPublicListing] = useState<string>('');
   const openPublic = (variant: 'property' | 'reviews') => {
     if (!publicListing) return;
@@ -118,7 +177,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-4">
-      {/* Title row with stats and NEW public view dropdown */}
+      {/* Title row with stats and public view dropdown */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <h1 className="text-2xl font-semibold text-ink">Manager Reviews Dashboard</h1>
 
