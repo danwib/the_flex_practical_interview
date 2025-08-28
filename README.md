@@ -3,7 +3,7 @@
 This repository contains a Next.js application that implements a **reviews dashboard** and **public property review pages** for The Flex. It ships with mock data, an internal API that normalizes/filters reviews, and an optional **Google Reviews** integration (mockable).
 
 > **Live demo (Vercel):** the-flex-practical-interview.vercel.app  
-> **GitHub repo:** github.com/danwib/the_flex_practical_interview/
+> **GitHub repo:** https://github.com/danwib/the_flex_practical_interview/
 > **Dashboard:** `/dashboard`  
 > **Example property:** `/properties/2B%20N1%20A%20-%2029%20Shoreditch%20Heights`
 
@@ -207,6 +207,29 @@ Fetches Google Place Details (reviews) **or** returns mock data when `mock=1` is
 - **Client-side merge for Google**: Keeps the server simple for the brief; minimizes storage; easy to toggle mock mode. (Production could move merging server-side with cache + concurrency caps.)
 - **Approvals model**: Union of `server-approved || local approved`. In production this would be persisted in a DB (e.g., Vercel KV/Postgres) and exposed via `approvedOnly=true` queries.
 - **Accessibility touches**: Focusable controls, readable contrast, sticky header/toolbars.
+
+
+---
+
+## Approvals Workflow (Demo vs Production)
+
+For the demo, **approvals are stored client-side** in `localStorage` keyed by review `id`. The UI treats a review as approved if **`server-approved === true` OR it was ticked locally**. Public pages (property details and all-reviews) display **approved-only** items.
+
+In production, approvals would be persisted in a database (e.g., Vercel KV/Postgres) and exposed by the API. Public pages would query with `approvedOnly=true` so that only server-approved content is returned—no client union needed.
+
+## Known Limitations & Trade-offs
+
+- **Google Places limit (~5 reviews):** The real Places Details response typically includes at most ~5 reviews. Mock mode can return more via `limit=all`, but real mode mirrors the upstream limit.
+- **No long-term storage of Google content:** To comply with Google’s terms, Google review content is fetched **on demand** and not stored long-term.
+- **Mock mode for demo:** `?mock=1` enables local mock data to demonstrate the UX without API keys or quota usage.
+- **Client-side merge on the dashboard:** For the brief and demo scale, merging Hostaway + Google on the client is simple and fast. In production, move this merge **server-side** (a combined endpoint) with short caching and **concurrency caps** to control cost/latency.
+- **Listing name matching for mock data:** Mock Google reviews are keyed by **exact listing name**. Ensure names match the Hostaway data to see merged rows.
+## Google Reviews — Findings & Approach
+- **Place ID required per listing**: we use `data/google-places.json` to map listing name → Place ID (for real calls).
+- **Quota/cost**: Place Details with `reviews` is billable; keep field mask tight and avoid fan-out calls in production.
+- **Content policy**: Google content shouldn’t be stored long-term. We **fetch on demand**; mock mode is used for demo.
+- **Limit**: Place Details typically returns **up to ~5** reviews. We mirror that in real mode; mock mode can exceed via `limit=all`.
+- **Attribution**: Tiny “Review from Google” label is shown when channel is Google. Include `sourceUrl` if present.
 
 ---
 
