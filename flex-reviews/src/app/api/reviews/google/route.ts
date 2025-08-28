@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 
+// flex-reviews/src/app/api/reviews/google/route.ts
+export const runtime = 'nodejs';   // <— add this
+export const revalidate = 0;       // always fresh (ok for basic integration)
+
+
 type Normalized = {
   id: number;
   type: "guest-to-host";

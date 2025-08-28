@@ -12,8 +12,8 @@ type Review = {
   submittedAtIso?: string;
   reviewCategory: CategoryRating[];
   approved?: boolean;
-  channel?: string;
-  rating?: number | null; // may be /10 in your data
+  channel?: string;          // may be "Google"
+  rating?: number | null;    // may be /10 in your data
 };
 
 function Bullet() {
@@ -37,20 +37,63 @@ function Section({ title, children, id }: { title: string; children: React.React
   );
 }
 
+// --- helpers ---
+function epochMs(r: Review): number {
+  const isoish = r.submittedAtIso ?? (r.submittedAt ? r.submittedAt.replace(' ', 'T') + 'Z' : '');
+  const t = Date.parse(isoish);
+  return Number.isNaN(t) ? 0 : t;
+}
+function sortByDateDesc(rows: Review[]): Review[] {
+  return [...rows].sort((a, b) => epochMs(b) - epochMs(a));
+}
+
 export default function PropertyDetailsClient({ slug }: { slug: string }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [approvals, setApprovals] = useState<Record<number, boolean>>({});
   const [aboutOpen, setAboutOpen] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
 
-  // Fetch all reviews for this listing; show approved-only (server OR local demo)
+  // Fetch Hostaway + Google for this listing; then show approved-only (server OR local demo)
   useEffect(() => {
-    const url = new URL('/api/reviews/hostaway', window.location.origin);
-    url.searchParams.set('listing', slug);
-    url.searchParams.set('sort', 'date');
-    url.searchParams.set('order', 'desc');
-    fetch(url).then(r => r.json()).then(d => setReviews(Array.isArray(d?.result) ? d.result : []));
-    try { setApprovals(JSON.parse(localStorage.getItem('approvals') || '{}')); } catch {}
+    let cancelled = false;
+    const origin = window.location.origin;
+
+    async function load() {
+      // Hostaway (or mock) first
+      const hUrl = new URL('/api/reviews/hostaway', origin);
+      hUrl.searchParams.set('listing', slug);
+      hUrl.searchParams.set('sort', 'date');
+      hUrl.searchParams.set('order', 'desc');
+      const hResp = await fetch(hUrl);
+      const hJson = await hResp.json();
+      const hostawayRows: Review[] = Array.isArray(hJson?.result) ? hJson.result : [];
+
+      // Then Google for this listing (basic integration, fail-soft)
+      let merged = hostawayRows;
+      try {
+        const gUrl = new URL('/api/reviews/google', origin);
+        gUrl.searchParams.set('listing', slug);
+        const gResp = await fetch(gUrl);
+        const gJson = await gResp.json();
+        const googleRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
+        if (googleRows.length) merged = sortByDateDesc([...hostawayRows, ...googleRows]);
+      } catch {
+        // ignore Google failures; keep Hostaway
+      }
+
+      if (!cancelled) setReviews(merged);
+
+      // local approvals (demo)
+      try {
+        const raw = localStorage.getItem('approvals') || '{}';
+        if (!cancelled) setApprovals(JSON.parse(raw));
+      } catch {
+        /* noop */
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [slug]);
 
   const approved = useMemo(
@@ -75,7 +118,6 @@ export default function PropertyDetailsClient({ slug }: { slug: string }) {
   };
 
   // ---- Page layout ----
-  // Breadcrumb + title/meta + rating block, then gallery
   return (
     <div className="bg-background text-ink">
       <div className="mx-auto max-w-6xl px-4 py-6">
@@ -106,7 +148,6 @@ export default function PropertyDetailsClient({ slug }: { slug: string }) {
             </span>
           </div>
         </header>
-
 
         {/* Gallery (placeholder) */}
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -191,6 +232,23 @@ export default function PropertyDetailsClient({ slug }: { slug: string }) {
                       )}
                     </p>
                     <p className="mt-2 leading-relaxed">{r.publicReview}</p>
+
+                    {/* Tiny attribution for Google content */}
+                    {r.channel === 'Google' && (
+                      <p className="mt-1 text-[10px] uppercase tracking-wide text-subtle">
+                        Review from Google
+                      </p>
+                    )}
+
+                    {!!r.reviewCategory?.length && (
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-subtle">
+                        {r.reviewCategory.map((c) => (
+                          <span key={c.category} className="rounded-full border border-line px-2 py-0.5">
+                            {c.category}: <b className="text-ink">{c.rating ?? '-'}</b>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
