@@ -117,7 +117,7 @@ export default function DashboardPage() {
       } catch {
         if (!cancelled) setReviews(base);
       }
-
+    }
 
     load();
     return () => { cancelled = true; };
