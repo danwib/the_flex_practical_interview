@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 
-export const runtime = "nodejs";   // Node runtime (fs allowed)
-export const revalidate = 0;       // Dynamic; no prerender
+export const runtime = "nodejs";
+export const revalidate = 0;
 
 // ---------- Types ----------
 type CategoryRating = { category: string; rating: number | null };
@@ -24,52 +24,41 @@ type Review = {
   approved?: boolean;
 };
 
-// A flexible upstream shape we can safely normalize from
 type HostawayReviewLike = {
   id?: number | string;
   reviewId?: number | string;
   _id?: string;
   uuid?: string;
-
   listingName?: string;
   propertyName?: string;
   listing?: { name?: string } | null;
   property?: { name?: string } | null;
-
   guestName?: string;
   reviewerName?: string;
   guest?: { name?: string } | null;
   authorName?: string;
-
   publicReview?: string;
   review?: string;
   comment?: string;
   text?: string;
-
   status?: string;
-
   channel?: string;
   source?: string;
   platform?: string;
   channelId?: string | number;
-
   type?: string;
   direction?: string;
-
   rating?: number;
   overallRating?: number;
   score?: number;
-
   reviewCategory?: Array<{ category?: unknown; rating?: unknown }>;
   categories?: Record<string, unknown>;
-
   submittedAtIso?: string;
   createdAt?: string;
   date?: string;
   created?: string;
   updatedAt?: string;
   submittedAt?: string;
-
   approved?: boolean;
   isApproved?: boolean;
   visibility?: string;
@@ -115,17 +104,13 @@ function parseCsvLower(s: string | null): string[] | null {
 function icaseEq(a: string, b: string) {
   return a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
 }
-
-// Avoid `any`: only require the .text() method used by safeText
 type HasTextMethod = { text: () => Promise<string> };
 async function safeText(res: HasTextMethod): Promise<string> {
   try { return await res.text(); } catch { return "<no body>"; }
 }
-
 function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null;
 }
-
 function getResultArray(v: unknown): unknown[] {
   if (Array.isArray(v)) return v;
   if (isRecord(v) && Array.isArray((v as { result?: unknown[] }).result)) {
@@ -134,12 +119,11 @@ function getResultArray(v: unknown): unknown[] {
   return [];
 }
 
-// ---------- Token cache (module-scope; survives warm invocations) ----------
+// ---------- Token cache ----------
 let tokenCache: { token: string; exp: number } | null = null;
 
 async function getHostawayToken(): Promise<string> {
   if (!USE_LIVE) throw new Error("LIVE_DISABLED");
-
   const now = Date.now();
   if (tokenCache && now < tokenCache.exp) return tokenCache.token;
 
@@ -295,6 +279,18 @@ export async function GET(req: NextRequest) {
     source = "live-error-fallback";
   }
 
+  // ---- DEFAULTS EARLY (before filtering!) ----
+  rows = rows.map(r => ({
+    ...r,
+    channel: r.channel ?? 'Hostaway',
+    type: r.type ?? 'guest-to-host',
+    rating: r.rating ?? null,
+    submittedAtIso:
+      r.submittedAtIso ??
+      (r.submittedAt ? r.submittedAt.replace(' ', 'T') + 'Z' : undefined),
+  }));
+
+  // ---- Filters ----
   if (listing) {
     rows = rows.filter((r) => icaseEq(r.listingName, listing));
   }
@@ -308,11 +304,12 @@ export async function GET(req: NextRequest) {
   }
 
   if (types && types.length > 0) {
-    rows = rows.filter((r) => (r.type ? types.includes(r.type.toLowerCase()) : false));
+    rows = rows.filter((r) => types.includes((r.type ?? '').toLowerCase()));
   }
 
   if (channels && channels.length > 0) {
-    rows = rows.filter((r) => (r.channel ? channels.includes(r.channel.toLowerCase()) : false));
+    const allow = new Set(channels.map(c => c.toLowerCase()));
+    rows = rows.filter((r) => allow.has((r.channel ?? 'Hostaway').toLowerCase()));
   }
 
   if (category) {
@@ -335,6 +332,7 @@ export async function GET(req: NextRequest) {
     return true;
   });
 
+  // ---- Sorting ----
   if (sort === "date") {
     rows.sort((a, b) => toEpochMs(a) - toEpochMs(b));
   } else if (sort === "rating") {
@@ -349,18 +347,7 @@ export async function GET(req: NextRequest) {
   }
   if (order === "desc") rows.reverse();
 
-  // Ensure Hostaway-normalized fields are always present
-  rows = rows.map(r => ({
-    ...r,
-    channel: r.channel ?? 'Hostaway',          // so the dashboard doesn't show "—"
-    type: r.type ?? 'guest-to-host',
-    rating: r.rating ?? null,
-    // optional: provide an ISO field many UIs prefer (keeps your existing shape too)
-    submittedAtIso:
-      r.submittedAtIso ??
-      (r.submittedAt ? r.submittedAt.replace(' ', 'T') + 'Z' : undefined),
-  }));
-
+  // (No need for another defaults pass here)
 
   return NextResponse.json(
     { status: "success", result: rows },
