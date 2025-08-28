@@ -349,6 +349,19 @@ export async function GET(req: NextRequest) {
   }
   if (order === "desc") rows.reverse();
 
+  // Ensure Hostaway-normalized fields are always present
+  rows = rows.map(r => ({
+    ...r,
+    channel: r.channel ?? 'Hostaway',          // so the dashboard doesn't show "—"
+    type: r.type ?? 'guest-to-host',
+    rating: r.rating ?? null,
+    // optional: provide an ISO field many UIs prefer (keeps your existing shape too)
+    submittedAtIso:
+      r.submittedAtIso ??
+      (r.submittedAt ? r.submittedAt.replace(' ', 'T') + 'Z' : undefined),
+  }));
+
+
   return NextResponse.json(
     { status: "success", result: rows },
     {

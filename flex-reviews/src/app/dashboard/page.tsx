@@ -90,7 +90,7 @@ export default function DashboardPage() {
 
       if (cancelled) return;
 
-      // 2) Optionally fetch Google for the selected listing
+      // 2) Optionally fetch Google for the selected listing (mock mode enabled)
       const shouldFetchGoogle =
         !!listing && (channel === '' || channel.toLowerCase() === 'google');
 
@@ -102,20 +102,22 @@ export default function DashboardPage() {
       try {
         const gUrl = new URL('/api/reviews/google', origin);
         gUrl.searchParams.set('listing', listing);
+        gUrl.searchParams.set('mock', '1');     // 👈 enable mock results
+        gUrl.searchParams.set('limit', 'all');  // 👈 show all you put in the mock file (optional)
+
         const gResp = await fetch(gUrl);
         const gJson = await gResp.json();
         const gRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
 
         if (cancelled) return;
 
-        // 3) Merge + client-sort to match current sort key/order
+        // Merge + re-sort to match current sort
         const merged = sortCombined([...base, ...gRows], sortKey, sortOrder);
         setReviews(merged);
       } catch {
-        // fail-soft: just show base
         if (!cancelled) setReviews(base);
       }
-    }
+
 
     load();
     return () => { cancelled = true; };
