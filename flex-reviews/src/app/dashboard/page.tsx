@@ -73,27 +73,27 @@ export default function DashboardPage() {
     const origin = window.location.origin;
 
     async function load() {
-      // 1) Hostaway (or mock) via our API
+      // 1) Hostaway (or mock) via our API with current filters
       const url = new URL('/api/reviews/hostaway', origin);
       if (q) url.searchParams.set('q', q);
       if (listing) url.searchParams.set('listing', listing);
       if (category) url.searchParams.set('category', category);
       if (min !== '') url.searchParams.set('min', String(min));
-      if (channel) url.searchParams.set('channel', channel);
+      if (channel) url.searchParams.set('channel', channel); // note: this may be "google" → empty Hostaway set
       if (type) url.searchParams.set('type', type);
       if (sortKey) url.searchParams.set('sort', sortKey);
       if (sortOrder) url.searchParams.set('order', sortOrder);
 
       const baseResp = await fetch(url);
       const baseJson = await baseResp.json();
-      const base: Review[] = Array.isArray(baseJson?.result) ? baseJson.result : [];
+      let base: Review[] = Array.isArray(baseJson?.result) ? baseJson.result : [];
       if (cancelled) return;
 
-      // Decide Google strategy
-      const channelIsGoogleOrAll = (channel === '' || channel.toLowerCase() === 'google');
+      const channelLc = channel.toLowerCase();
+      const channelAllowsGoogle = channel === '' || channelLc === 'google';
 
-      // A) If a specific listing is selected → fetch Google for that one (what you had before)
-      if (listing && channelIsGoogleOrAll) {
+      // A) Listing selected → fetch Google for that listing (mock mode)
+      if (listing && channelAllowsGoogle) {
         try {
           const gUrl = new URL('/api/reviews/google', origin);
           gUrl.searchParams.set('listing', listing);
@@ -111,15 +111,29 @@ export default function DashboardPage() {
         }
       }
 
-      // B) No listing selected → fetch Google for EVERY listing we see in `base`
-      if (!listing && channelIsGoogleOrAll) {
-        const uniqueListings = Array.from(new Set(base.map(r => r.listingName))).filter(Boolean);
-        // fire requests in parallel; fail-soft
+      // B) No listing selected and Google is allowed → fetch Google for EVERY listing
+      if (!listing && channelAllowsGoogle) {
+        // If Channel=Google, base may be empty. Fetch a names-only Hostaway set without channel to discover listings.
+        let baseForNames: Review[] = base;
+        if (channelLc === 'google' && base.length === 0) {
+          const namesUrl = new URL('/api/reviews/hostaway', origin);
+          if (q) namesUrl.searchParams.set('q', q);
+          if (category) namesUrl.searchParams.set('category', category);
+          if (min !== '') namesUrl.searchParams.set('min', String(min));
+          if (type) namesUrl.searchParams.set('type', type);
+          // intentionally DO NOT set channel here
+          const namesResp = await fetch(namesUrl);
+          const namesJson = await namesResp.json();
+          baseForNames = Array.isArray(namesJson?.result) ? namesJson.result : [];
+          if (cancelled) return;
+        }
+
+        const uniqueListings = Array.from(new Set(baseForNames.map(r => r.listingName))).filter(Boolean);
         const promises = uniqueListings.map((name) => {
           const gUrl = new URL('/api/reviews/google', origin);
           gUrl.searchParams.set('listing', name);
-          gUrl.searchParams.set('mock', '1');     // mock mode
-          gUrl.searchParams.set('limit', 'all');  // show all mock items
+          gUrl.searchParams.set('mock', '1');
+          gUrl.searchParams.set('limit', 'all');
           return fetch(gUrl)
             .then(r => r.json())
             .then(j => (Array.isArray(j?.result) ? (j.result as Review[]) : []))
@@ -134,7 +148,7 @@ export default function DashboardPage() {
         return;
       }
 
-      // C) Channel excludes Google (e.g., "Hostaway") → just show base
+      // C) Channel excludes Google (e.g., "Hostaway") → show Hostaway-only
       setReviews(base);
     }
 
