@@ -2,7 +2,7 @@
 
 This repository contains a Next.js application that implements a **reviews dashboard** and **public property review pages** for The Flex. It ships with mock data, an internal API that normalizes/filters reviews, and an optional **Google Reviews** integration (mockable).
 
-> **Live demo (Vercel):** the-flex-practical-interview.vercel.app  
+> **Live demo (Vercel):** https://the-flex-practical-interview.vercel.app  
 > **GitHub repo:** https://github.com/danwib/the_flex_practical_interview/
 > **Dashboard:** `/dashboard`  
 > **Example property:** `/properties/2B%20N1%20A%20-%2029%20Shoreditch%20Heights`
