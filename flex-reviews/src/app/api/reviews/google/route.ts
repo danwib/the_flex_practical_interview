@@ -1,21 +1,46 @@
-import { NextResponse } from "next/server";
-
 // flex-reviews/src/app/api/reviews/google/route.ts
-export const runtime = 'nodejs';   // <— add this
-export const revalidate = 0;       // always fresh (ok for basic integration)
+import { NextResponse } from 'next/server';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
+/** ---- Types for the (New) Google Places API fields we actually use ---- */
+interface PlaceAuthorAttribution {
+  displayName?: string;
+  uri?: string;
+  photoUri?: string;
+}
+interface PlaceReview {
+  name?: string; // e.g. "places/PLACE_ID/reviews/REVIEW_ID"
+  text?: { text?: string };
+  rating?: number; // /5
+  publishTime?: string; // ISO
+  relativePublishTimeDescription?: string;
+  googleMapsUri?: string;
+  authorAttribution?: PlaceAuthorAttribution;
+}
+interface PlaceDetailsResponse {
+  displayName?: { text?: string };
+  googleMapsUri?: string;
+  rating?: number;
+  userRatingCount?: number;
+  reviews?: PlaceReview[];
+}
+
+/** ---- App's normalized shape ---- */
 type Normalized = {
-  id: number;
-  type: "guest-to-host";
-  status: "published";
-  rating: number | null;            // /10 (Google is /5 → we *2)
+  id: number; // numeric for UI/local approvals
+  type: 'guest-to-host';
+  status: 'published';
+  rating: number | null; // /10 (Google is /5 → *2 and round)
   publicReview: string;
   reviewCategory: { category: string; rating: number | null }[];
-  submittedAt: string;              // ISO string
+  submittedAt: string; // ISO string
   guestName: string;
   listingName: string;
-  channel: "Google";
+  channel: 'Google';
   sourceUrl?: string;
 };
 
@@ -27,68 +52,77 @@ function hashToInt(s: string) {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const listing = url.searchParams.get("listing") || "";
-  const explicitPlaceId = url.searchParams.get("placeId") || "";
+  const listing = url.searchParams.get('listing') || '';
+  const explicitPlaceId = url.searchParams.get('placeId') || '';
 
-  // read mapping file (listing -> placeId)
+  // Resolve placeId from mapping file if not explicitly provided
   let placeId = explicitPlaceId;
-  try {
-    const file = await import("node:fs/promises");
-    const path = await import("node:path");
-    const raw = await file.readFile(path.join(process.cwd(), "data", "google-places.json"), "utf8");
-    const map = JSON.parse(raw) as Record<string, string>;
-    if (!placeId && listing) placeId = map[listing] || "";
-  } catch {
-    /* no mapping file */
+  if (!placeId && listing) {
+    try {
+      const raw = await fs.readFile(path.join(process.cwd(), 'data', 'google-places.json'), 'utf8');
+      const map = JSON.parse(raw) as Record<string, string>;
+      placeId = map[listing] || '';
+    } catch {
+      // mapping file optional
+    }
   }
 
-  if (!placeId || !process.env.GOOGLE_MAPS_API_KEY) {
-    return NextResponse.json({ status: "success", result: [] });
+  // Fail-soft: if no key or no placeId, return empty result (keeps UI happy)
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey || !placeId) {
+    return NextResponse.json({ status: 'success', result: [] });
   }
 
-  // Places API (New) Place Details - request only review-related fields
+  // Request a minimal field mask (Place Details - New Places API)
   const fields = [
-    "displayName",
-    "googleMapsUri",
-    "reviews.text",
-    "reviews.rating",
-    "reviews.publishTime",
-    "reviews.googleMapsUri",
-    "reviews.authorAttribution.displayName"
-  ].join(",");
+    'displayName',
+    'googleMapsUri',
+    'reviews.text',
+    'reviews.rating',
+    'reviews.publishTime',
+    'reviews.googleMapsUri',
+    'reviews.authorAttribution.displayName',
+  ].join(',');
 
   const endpoint =
     `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?` +
     `fields=${encodeURIComponent(fields)}&languageCode=en`;
 
   const res = await fetch(endpoint, {
-    headers: { "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY! },
-    cache: "no-store",
+    headers: { 'X-Goog-Api-Key': apiKey },
+    cache: 'no-store',
   });
 
   if (!res.ok) {
-    return NextResponse.json({ status: "success", result: [] }); // fail-soft
+    // Fail-soft (don’t break the dashboard)
+    return NextResponse.json({ status: 'success', result: [] });
   }
 
-  const data = await res.json();
-  const placeName = data?.displayName?.text || listing;
+  const data = (await res.json()) as PlaceDetailsResponse;
+  const placeName = data.displayName?.text || listing;
+  const placeUri = data.googleMapsUri;
 
-  const result: Normalized[] = (data?.reviews ?? []).slice(0, 5).map((rev: any) => {
-    const stableKey = rev.name || `${rev.publishTime}|${rev.authorAttribution?.displayName || ""}|${rev?.text?.text || ""}`;
+  // Map & normalize, keep it to max 5
+  const reviews = (data.reviews ?? []).slice(0, 5);
+
+  const result: Normalized[] = reviews.map((rev: PlaceReview) => {
+    const stableKey =
+      rev.name ||
+      `${rev.publishTime ?? ''}|${rev.authorAttribution?.displayName ?? ''}|${rev.text?.text ?? ''}`;
     return {
-      id: 900000 + (hashToInt(stableKey) % 100000),      // numeric for UI/local approvals
-      type: "guest-to-host",
-      status: "published",
-      rating: typeof rev.rating === "number" ? Math.round(rev.rating * 2) : null, // /5 -> /10
-      publicReview: rev?.text?.text ?? "",
+      id: 900000 + (hashToInt(stableKey) % 100000), // numeric, stable-ish
+      type: 'guest-to-host',
+      status: 'published',
+      rating: typeof rev.rating === 'number' ? Math.round(rev.rating * 2) : null, // /5 → /10
+      publicReview: rev.text?.text ?? '',
       reviewCategory: [],
-      submittedAt: rev?.publishTime ?? "",
-      guestName: rev?.authorAttribution?.displayName || "Google user",
+      submittedAt: rev.publishTime ?? '',
+      guestName: rev.authorAttribution?.displayName || 'Google user',
       listingName: placeName,
-      channel: "Google",
-      sourceUrl: rev?.googleMapsUri || data?.googleMapsUri
+      channel: 'Google',
+      sourceUrl: rev.googleMapsUri || placeUri,
     };
   });
 
-  return NextResponse.json({ status: "success", result });
+  return NextResponse.json({ status: 'success', result });
 }
