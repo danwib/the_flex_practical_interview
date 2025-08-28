@@ -79,14 +79,14 @@ export default function DashboardPage() {
       if (listing) url.searchParams.set('listing', listing);
       if (category) url.searchParams.set('category', category);
       if (min !== '') url.searchParams.set('min', String(min));
-      if (channel) url.searchParams.set('channel', channel); // note: this may be "google" → empty Hostaway set
+      if (channel) url.searchParams.set('channel', channel);
       if (type) url.searchParams.set('type', type);
       if (sortKey) url.searchParams.set('sort', sortKey);
       if (sortOrder) url.searchParams.set('order', sortOrder);
 
       const baseResp = await fetch(url);
       const baseJson = await baseResp.json();
-      let base: Review[] = Array.isArray(baseJson?.result) ? baseJson.result : [];
+      const base: Review[] = Array.isArray(baseJson?.result) ? baseJson.result : [];
       if (cancelled) return;
 
       const channelLc = channel.toLowerCase();
@@ -97,8 +97,8 @@ export default function DashboardPage() {
         try {
           const gUrl = new URL('/api/reviews/google', origin);
           gUrl.searchParams.set('listing', listing);
-          gUrl.searchParams.set('mock', '1');     // mock mode
-          gUrl.searchParams.set('limit', 'all');  // show all mock items
+          gUrl.searchParams.set('mock', '1');
+          gUrl.searchParams.set('limit', 'all');
           const gResp = await fetch(gUrl);
           const gJson = await gResp.json();
           const gRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
@@ -113,7 +113,7 @@ export default function DashboardPage() {
 
       // B) No listing selected and Google is allowed → fetch Google for EVERY listing
       if (!listing && channelAllowsGoogle) {
-        // If Channel=Google, base may be empty. Fetch a names-only Hostaway set without channel to discover listings.
+        // If Channel=Google, base may be empty. Fetch names without the channel filter.
         let baseForNames: Review[] = base;
         if (channelLc === 'google' && base.length === 0) {
           const namesUrl = new URL('/api/reviews/hostaway', origin);
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         return;
       }
 
-      // C) Channel excludes Google (e.g., "Hostaway") → show Hostaway-only
+      // C) Channel excludes Google → show Hostaway-only
       setReviews(base);
     }
 
