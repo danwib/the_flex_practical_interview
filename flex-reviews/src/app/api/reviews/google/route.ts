@@ -54,6 +54,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const listing = url.searchParams.get('listing') || '';
   const explicitPlaceId = url.searchParams.get('placeId') || '';
+  const useMock = url.searchParams.get('mock') === '1'; // <-- mock switch
 
   // Resolve placeId from mapping file if not explicitly provided
   let placeId = explicitPlaceId;
@@ -64,6 +65,18 @@ export async function GET(req: Request) {
       placeId = map[listing] || '';
     } catch {
       // mapping file optional
+    }
+  }
+
+  // --- MOCK MODE: read local mock file and return normalized results ---
+  if (useMock) {
+    try {
+      const raw = await fs.readFile(path.join(process.cwd(), 'data', 'google-mock-reviews.json'), 'utf8');
+      const mockMap = JSON.parse(raw) as Record<string, Normalized[]>;
+      const result = (mockMap[listing] ?? []).slice(0, 5); // mirror Google’s max 5
+      return NextResponse.json({ status: 'success', result });
+    } catch {
+      return NextResponse.json({ status: 'success', result: [] });
     }
   }
 
