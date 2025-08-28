@@ -1,108 +1,77 @@
 {
   "2B N1 A - 29 Shoreditch Heights": [
     {
-      "id": 900101,
+      "id": 900201,
       "type": "guest-to-host",
       "status": "published",
       "rating": 10,
-      "publicReview": "Fantastic stay and great location. Would return!",
+      "publicReview": "Fantastic apartment in the heart of Shoreditch—spotless and super easy self check-in.",
       "reviewCategory": [],
-      "submittedAt": "2025-05-14T10:00:00Z",
+      "submittedAt": "2025-05-12T09:30:00Z",
       "guestName": "Google user",
       "listingName": "2B N1 A - 29 Shoreditch Heights",
       "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
+      "sourceUrl": "https://maps.google.com/?q=Shoreditch+Heights"
+    }
+  ],
+  "1BR Deluxe - Waterloo Arch 191": [
     {
-      "id": 900102,
+      "id": 900202,
       "type": "guest-to-host",
       "status": "published",
       "rating": 8,
-      "publicReview": "Clean, easy check-in. Wi-Fi could be faster.",
+      "publicReview": "Great location near Waterloo—quiet at night and comfortable bed.",
       "reviewCategory": [],
-      "submittedAt": "2025-04-02T09:30:00Z",
+      "submittedAt": "2025-03-28T18:15:00Z",
       "guestName": "Amelia",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
+      "listingName": "1BR Deluxe - Waterloo Arch 191",
       "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
+      "sourceUrl": "https://maps.google.com/?q=Waterloo+Arch+191"
+    }
+  ],
+  "Studio - Canary Wharf Dockside": [
     {
-      "id": 900103,
+      "id": 900203,
       "type": "guest-to-host",
       "status": "published",
       "rating": 9,
-      "publicReview": "Lovely apartment, quiet at night.",
+      "publicReview": "Modern studio with a great dockside view—perfect for a work trip.",
       "reviewCategory": [],
-      "submittedAt": "2025-03-20T18:05:00Z",
+      "submittedAt": "2024-12-05T14:45:00Z",
       "guestName": "Sam",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
+      "listingName": "Studio - Canary Wharf Dockside",
       "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
+      "sourceUrl": "https://maps.google.com/?q=Canary+Wharf+Dockside"
+    }
+  ],
+  "2BR - King’s Cross St Pancras": [
     {
-      "id": 900104,
+      "id": 900204,
       "type": "guest-to-host",
       "status": "published",
       "rating": 7,
-      "publicReview": "Good overall, a couple of minor issues.",
+      "publicReview": "Spacious flat with easy access to St Pancras. Check-in instructions could be clearer.",
       "reviewCategory": [],
-      "submittedAt": "2025-02-28T12:00:00Z",
+      "submittedAt": "2025-01-22T11:05:00Z",
       "guestName": "Priya",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
+      "listingName": "2BR - King’s Cross St Pancras",
       "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
+      "sourceUrl": "https://maps.google.com/?q=Kings+Cross+St+Pancras"
+    }
+  ],
+  "Penthouse - Southbank Riverside": [
     {
-      "id": 900105,
+      "id": 900205,
       "type": "guest-to-host",
       "status": "published",
       "rating": 10,
-      "publicReview": "Host was super responsive, great stay.",
+      "publicReview": "Stunning penthouse with river views—immaculate and hosts were very responsive.",
       "reviewCategory": [],
-      "submittedAt": "2025-01-14T08:10:00Z",
+      "submittedAt": "2025-04-10T08:10:00Z",
       "guestName": "Alex",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
+      "listingName": "Penthouse - Southbank Riverside",
       "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
-    {
-      "id": 900106,
-      "type": "guest-to-host",
-      "status": "published",
-      "rating": 9,
-      "publicReview": "Perfect location for our trip.",
-      "reviewCategory": [],
-      "submittedAt": "2024-12-05T14:45:00Z",
-      "guestName": "Marta",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
-      "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
-    {
-      "id": 900107,
-      "type": "guest-to-host",
-      "status": "published",
-      "rating": 8,
-      "publicReview": "As described. Would recommend.",
-      "reviewCategory": [],
-      "submittedAt": "2024-11-12T16:20:00Z",
-      "guestName": "Chris",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
-      "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
-    },
-    {
-      "id": 900108,
-      "type": "guest-to-host",
-      "status": "published",
-      "rating": 7,
-      "publicReview": "Nice place. Check-in instructions could be clearer.",
-      "reviewCategory": [],
-      "submittedAt": "2024-10-01T11:00:00Z",
-      "guestName": "Dana",
-      "listingName": "2B N1 A - 29 Shoreditch Heights",
-      "channel": "Google",
-      "sourceUrl": "https://maps.google.com/?q=..."
+      "sourceUrl": "https://maps.google.com/?q=Southbank+Riverside"
     }
   ]
 }

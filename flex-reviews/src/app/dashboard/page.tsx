@@ -87,36 +87,55 @@ export default function DashboardPage() {
       const baseResp = await fetch(url);
       const baseJson = await baseResp.json();
       const base: Review[] = Array.isArray(baseJson?.result) ? baseJson.result : [];
-
       if (cancelled) return;
 
-      // 2) Optionally fetch Google for the selected listing (mock mode enabled)
-      const shouldFetchGoogle =
-        !!listing && (channel === '' || channel.toLowerCase() === 'google');
+      // Decide Google strategy
+      const channelIsGoogleOrAll = (channel === '' || channel.toLowerCase() === 'google');
 
-      if (!shouldFetchGoogle) {
-        setReviews(base); // Already server-sorted
+      // A) If a specific listing is selected → fetch Google for that one (what you had before)
+      if (listing && channelIsGoogleOrAll) {
+        try {
+          const gUrl = new URL('/api/reviews/google', origin);
+          gUrl.searchParams.set('listing', listing);
+          gUrl.searchParams.set('mock', '1');     // mock mode
+          gUrl.searchParams.set('limit', 'all');  // show all mock items
+          const gResp = await fetch(gUrl);
+          const gJson = await gResp.json();
+          const gRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
+          if (cancelled) return;
+          setReviews(sortCombined([...base, ...gRows], sortKey, sortOrder));
+          return;
+        } catch {
+          if (!cancelled) setReviews(base);
+          return;
+        }
+      }
+
+      // B) No listing selected → fetch Google for EVERY listing we see in `base`
+      if (!listing && channelIsGoogleOrAll) {
+        const uniqueListings = Array.from(new Set(base.map(r => r.listingName))).filter(Boolean);
+        // fire requests in parallel; fail-soft
+        const promises = uniqueListings.map((name) => {
+          const gUrl = new URL('/api/reviews/google', origin);
+          gUrl.searchParams.set('listing', name);
+          gUrl.searchParams.set('mock', '1');     // mock mode
+          gUrl.searchParams.set('limit', 'all');  // show all mock items
+          return fetch(gUrl)
+            .then(r => r.json())
+            .then(j => (Array.isArray(j?.result) ? (j.result as Review[]) : []))
+            .catch(() => []);
+        });
+
+        const settled = await Promise.allSettled(promises);
+        if (cancelled) return;
+
+        const gRows = settled.flatMap(s => (s.status === 'fulfilled' ? s.value : []));
+        setReviews(sortCombined([...base, ...gRows], sortKey, sortOrder));
         return;
       }
 
-      try {
-        const gUrl = new URL('/api/reviews/google', origin);
-        gUrl.searchParams.set('listing', listing);
-        gUrl.searchParams.set('mock', '1');     // 👈 enable mock results
-        gUrl.searchParams.set('limit', 'all');  // 👈 show all you put in the mock file (optional)
-
-        const gResp = await fetch(gUrl);
-        const gJson = await gResp.json();
-        const gRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
-
-        if (cancelled) return;
-
-        // Merge + re-sort to match current sort
-        const merged = sortCombined([...base, ...gRows], sortKey, sortOrder);
-        setReviews(merged);
-      } catch {
-        if (!cancelled) setReviews(base);
-      }
+      // C) Channel excludes Google (e.g., "Hostaway") → just show base
+      setReviews(base);
     }
 
     load();
