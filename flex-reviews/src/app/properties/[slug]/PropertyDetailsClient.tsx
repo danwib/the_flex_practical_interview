@@ -73,6 +73,7 @@ export default function PropertyDetailsClient({ slug }: { slug: string }) {
       try {
         const gUrl = new URL('/api/reviews/google', origin);
         gUrl.searchParams.set('listing', slug);
+        gUrl.searchParams.set('mock', '1'); // enable mock Google reviews
         const gResp = await fetch(gUrl);
         const gJson = await gResp.json();
         const googleRows: Review[] = Array.isArray(gJson?.result) ? gJson.result : [];
